@@ -49,11 +49,13 @@ $ pip install -r requirements.txt
 See the `settings.py` file for more configuration options (you can easily add/customize options to your desire)
 
 ## Development
-During development, open two terminal sessions and start the Webpack dev server (http://localhost:8080) in one session and run the Django dev server (http://localhost:8000) in the other.
+During development, open two terminal sessions and start the Webpack dev server (on port 8080) in one session and run the Django dev server (on port 8000) in the other.
 
 `$ npm run serve`
 
 `$ python manage.py runserver`
+
+Go to http://localhost:8000/app to see the Vue SPA, and http://localhost:8000/api/hello to see the included hello world API endpoint.
 
 ## Production
 To deploy the application for production, run the following commands:
