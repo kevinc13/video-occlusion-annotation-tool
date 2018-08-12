@@ -1,0 +1,7 @@
+.DS_Store
+
+# Editor config
+.vscode/
+
+# Ignore public assets directory
+public/
