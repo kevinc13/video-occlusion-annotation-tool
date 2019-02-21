@@ -1,0 +1,19 @@
+@import "~bulma/sass/utilities/initial-variables";
+@import "~bulma/sass/utilities/functions";
+
+$blue: #007bff;
+$red: #dc3545;
+$green: #28a745;
+$yellow: #ffc107;
+$orange: #fd7e14;
+$cyan: #17a2b8;
+
+$primary: $blue;
+$primary-invert: findColorInvert($blue);
+
+$footer-background-color: none;
+
+$family-sans-serif: BlinkMacSystemFont, -apple-system, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+
+@import "~bulma/bulma";
+// @import "~buefy/src/scss/buefy";

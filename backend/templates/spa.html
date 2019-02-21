@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load render_bundle from webpack_loader %}
 
-{% block title %}Vue SPA{% endblock %}
+{% block title %}VOAT{% endblock %}
 
 {% block stylesheets %}
 {% render_bundle 'app' 'css' %}
@@ -9,6 +9,9 @@
 
 {% block body %}
 <div id="app"></div>
+
+{# Fontawesome #}
+<script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
 
 {% if ENV_NAME == "production" %}
   {% render_bundle 'chunk-vendors' 'js' %}

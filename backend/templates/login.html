@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load render_bundle from webpack_loader %}
+
+{% block title %}Sign In{% endblock %}
+
+{% block stylesheets %}
+
+{# Load frontend CSS files #}
+{% render_bundle 'app' 'css' %}
+
+{% endblock %}
+
+{% block body %}
+<section class="section">
+  <div class="container is-fluid">
+    <div class="columns is-centered">
+      <div class="column is-half-desktop is-one-third-widescreen">
+        <h1 class="title has-text-weight-light level-item">Vondrick Lab</h1>
+
+        {% if form.errors %}
+          <div class="notification is-danger has-text-centered">
+            Invalid credentials. Please try again.
+          </div>
+        {% endif %}
+
+        {% if next %}
+          {% if user.is_authenticated %}
+            <div class="notification is-danger has-text-centered">
+              Your account doesn't have access to this page. To proceed,
+              please login with an account that has access.
+            </div>
+          {% else %}
+            <div class="notification is-danger has-text-centered">
+              Please login to see this page.
+            </div>
+          {% endif %}
+        {% endif %}
+
+        <div class="box">
+          <form method="POST" action="{% url 'login' %}">
+            <div class="field">
+              <label class="label is-medium">Username</label>
+              <div class="control has-icons-left">
+                <input type="text" name="username" class="input is-medium" placeholder="Columbia UNI" autofocus="">
+                <span class="icon is-medium is-left">
+                  <i class="fas fa-user"></i>
+                </span>
+              </div>
+            </div><!-- end field -->
+
+            <div class="field">
+              <label class="label is-medium">Password</label>
+              <div class="control has-icons-left">
+                <input type="password" name="password" class="input is-medium">
+                <span class="icon is-medium is-left">
+                  <i class="fas fa-lock"></i>
+                </span>
+              </div>
+            </div><!-- end field -->
+
+            <div class="field">
+              <input type="submit" 
+                     class="button is-medium is-fullwidth is-primary"
+                     value="Sign In">
+            </div><!-- end field -->
+
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}">
+          </form>
+        </div><!-- end box -->
+
+      </div><!-- end column -->
+    </div><!-- end columns -->
+  </div><!-- end container -->
+</section><!-- end section -->
+
+{# Fontawesome #}
+<script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+
+{% comment %}
+During development, we have to load the entire app bundle (including js)
+to load our custom styles since CSS files are only extracted during a 
+production Webpack build
+{% endcomment %}
+
+{% if ENV_NAME == 'development' %}
+  {% render_bundle 'app' 'js' %}
+{% endif %}
+
+{% endblock %}

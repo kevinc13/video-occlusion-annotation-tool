@@ -8,7 +8,7 @@ function resolve (dir) {
 
 module.exports = {
   outputDir: 'dist',
-  baseUrl: process.env.NODE_ENV === 'production'
+  publicPath: process.env.NODE_ENV === 'production'
     ? '/static/'
     : 'http://localhost:8080',
   configureWebpack: {
