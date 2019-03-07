@@ -1,7 +1,9 @@
 import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
+import Buefy from 'buefy'
 
+import 'buefy/dist/buefy.css'
 import './assets/scss/main.scss'
 
 Vue.config.productionTip = false
@@ -13,6 +15,9 @@ window.events = new Vue()
 window.flash = (message, type = 'is-success') => {
   window.events.$emit('flash', { message, type })
 }
+
+Vue.use(Buefy)
+Vue.use(require('vue-shortkey'))
 
 new Vue({
   router,

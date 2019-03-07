@@ -15,7 +15,12 @@ export default new Router({
     {
       path: '/annotate/:videoId',
       name: 'annotate',
-      component: Annotate
+      component: Annotate,
+      props (route) {
+        const props = { ...route.params }
+        props.videoId = Number(props.videoId)
+        return props
+      }
     }
   ]
 })

@@ -5,8 +5,10 @@
       <div ref="canvasWrapper">
         <canvas ref="outputCanvas" style="display: none;" width="1280" height="720"></canvas>
         <div class="canvas-layers" :style="{ 'width': width + 'px', 'height': height + 'px' }">
-          <canvas ref="videoCanvas" id="videoCanvas" :width="width" :height="height"></canvas>
-          <canvas ref="segmentationCanvas" id="segmentationCanvas" :width="width" :height="height" v-show="showSegmentations"></canvas>
+          <canvas ref="videoCanvas" id="videoCanvas"
+            :width="width" :height="height"></canvas>
+          <canvas ref="segmentationCanvas" id="segmentationCanvas"
+            :width="width" :height="height" v-show="showSegmentations"></canvas>
           <canvas ref="annotationCanvas" id="annotationCanvas" :width="width" :height="height"
             @mousedown="onMouseDown" @mousemove="onMouseMove"
             @mouseup="endPaintEvent" @mouseleave="endPaintEvent"></canvas>
@@ -21,16 +23,23 @@
           <p>Total Frames: {{ this.frames.length }}</p>
         </div>
       </div>
+
       <!-- Playback controls -->
       <div class="level">
         <div class="level-left">
           <div class="level-item has-addons">
-            <button class="button is-light" @click="stepBackward(5)">
+            <button class="button is-light"
+                v-shortkey="['shift', '[']"
+                @shortkey="stepBackward(5)"
+                @click="stepBackward(5)">
               <span class="icon">
                 <i class="fas fa-backward"></i>
               </span>
             </button>
-            <button class="button is-light" @click="stepBackward(1)">
+            <button class="button is-light"
+                v-shortkey="['[']"
+                @shortkey="stepBackward(1)"
+                @click="stepBackward(1)">
               <span class="icon">
                 <i class="fas fa-step-backward"></i>
               </span>
@@ -45,12 +54,18 @@
                 <i class="fas fa-play"></i>
               </span>
             </button>
-            <button class="button is-light" @click="stepForward(1)">
+            <button class="button is-light"
+                v-shortkey="[']']"
+                @shortkey="stepForward(1)"
+                @click="stepForward(1)">
               <span class="icon">
                 <i class="fas fa-step-forward"></i>
               </span>
             </button>
-            <button class="button is-light" @click="stepForward(5)">
+            <button class="button is-light"
+                v-shortkey="['shift', '}']"
+                @shortkey="stepForward(5)"
+                @click="stepForward(5)">
               <span class="icon">
                 <i class="fas fa-forward"></i>
               </span>
@@ -62,35 +77,66 @@
             </button>
           </div><!-- ./level-item ./buttons -->
           <div class="level-item">
-            <button class="button is-light" @click="toggleSegmentations">Toggle Segmentations</button>
+            <button class="button is-light"
+              v-shortkey.once="['t']"
+              @shortkey="toggleSegmentations"
+              @click="toggleSegmentations">Toggle Segmentations (t)</button>
           </div>
         </div><!-- ./level-left -->
         <div class="level-right">
           <button class="button is-primary"
+                  v-shortkey.once="['n']"
+                  @shortkey="beginAnnotating"
                   @click="beginAnnotating"
-                  v-show="!isAnnotating">Annotation Mode</button>
-          <div class="level-item" v-show="isAnnotating">
-            <button class="button is-light" @click="clear(annotationCanvasContext)">Clear</button>
-          </div><!-- ./level-item -->
-          <div class="level-item" v-show="isAnnotating">
-            <button class="button is-light" @click="stopAnnotating">Exit</button>
-          </div>
-          <button class="button is-primary" @click="saveAnnotation" v-show="isAnnotating">Save</button>
+                  v-show="!isAnnotating">New Annotation (n)</button>
         </div><!-- ./level-right -->
       </div><!-- ./level -->
-    </div>
+
+      <div class="level" v-show="isAnnotating">
+        <div class="level-left">
+          <div class="level-item">
+            <b-select placeholder="Object" v-model="selectedObject">
+              <option :value="obj" v-for="obj in video.segmented_objects" :key="obj.id">
+                ID: {{ obj.id }} | {{ obj.name }} | {{ obj.color }}
+              </option>
+            </b-select>
+          </div><!-- ./level-item -->
+          <div class="level-item">
+            <input type="range" min="1" max="100" v-model="brushSize">
+          </div>
+        </div><!-- ./level-left -->
+        <div class="level-right">
+          <div class="level-item">
+            <button class="button is-light" v-shortkey.once="['c']"
+              @shortkey="clear(annotationCanvasContext)"
+              @click="clear(annotationCanvasContext)">Clear (c)</button>
+          </div><!-- ./level-item -->
+          <div class="level-item">
+            <button class="button is-light" v-shortkey.once="['esc']"
+              @shortkey="stopAnnotating"
+              @click="stopAnnotating">Exit (esc)</button>
+          </div>
+          <button class="button is-primary"
+            v-shortkey.once="['s']"
+            @shortkey="saveAnnotation"
+            @click="saveAnnotation">Save (s)</button>
+        </div><!-- ./level-right -->
+      </div><!-- ./level -->
+    </div><!-- ./column -->
+
     <div class="column">
       <header class="subtitle">Frame Annotations ({{ currentAnnotations.length }})</header>
       <table class="table" v-if="currentAnnotations.length > 0">
         <thead>
           <td>Username</td>
+          <td>Object</td>
           <td>Actions</td>
         </thead>
         <tbody>
           <tr v-for="annotation in currentAnnotations" :key="annotation.id">
             <td>{{ annotation.user.username }}</td>
+            <td>{{ annotation.segmented_object.name }} - {{ annotation.segmented_object.id }}</td>
             <td class="has-addons">
-              <button class="button is-small is-light">Show</button>
               <button v-show="annotation.user.id == user.id"
                     class="button is-small is-danger" @click="removeAnnotation(annotation.id)">Remove</button>
             </td>
@@ -98,7 +144,8 @@
         </tbody>
       </table>
       <p v-else>No annotations found</p>
-    </div>
+    </div><!-- ./column -->
+
   </div><!-- ./player -->
 </template>
 
@@ -143,18 +190,18 @@ export default {
       rate: 10, // playback framerate
       paused: true, // whether video is paused
       showSegmentations: false, // whether to show segmentation overlay
-      showAnnotations: false,
-      animationFrameRequest: null,
+      showAnnotations: false, // whether to show annotation overlay
+      animationFrameRequest: null, // window animation frame request
 
       isAnnotating: false, // whether we are in annotation mode
-      brushSize: 20,
-      brushColor: 'blue',
+      brushSize: 20, // brush size of annotation
       isPainting: false,
       position: {
         offsetX: 0,
         offsetY: 0
       },
-      line: []
+      line: [],
+      selectedObject: null
     }
   },
 
@@ -164,6 +211,18 @@ export default {
     },
     currentAnnotations () {
       return (this.frames.length > 0) ? this.frames[this.currentFrame].occlusion_annotations : []
+    },
+    brushColor () {
+      if (this.selectedObject != null && this.selectedObject.color != null) {
+        return this.selectedObject.color
+      } else {
+        return null
+      }
+    },
+    hasUserAnnotation () {
+      return this.currentAnnotations.filter(a => {
+        return a.user.id === this.user.id
+      }).length > 0
     },
     ready () {
       return {
@@ -195,6 +254,8 @@ export default {
       this.isAnnotating = false
     },
     saveAnnotation () {
+      if (!this.isAnnotating || this.selectedObject == null) return
+
       this.clear(this.outputCanvasContext)
       this.outputCanvasContext.drawImage(
         this.$refs.annotationCanvas, 0, 0,
@@ -202,7 +263,8 @@ export default {
       let annotationImg = this.$refs.outputCanvas.toDataURL('image/png')
       API.post('annotations/', {
         frame: this.frames[this.currentFrame].id,
-        file: annotationImg
+        file: annotationImg,
+        segmented_object_id: this.selectedObject.id
       }).then(response => {
         this.frames[this.currentFrame].occlusion_annotations.push(response.data)
         this.clear(this.annotationCanvasContext)
@@ -223,9 +285,8 @@ export default {
         })
     },
     clear (context) { context.clearRect(0, 0, context.canvas.width, context.canvas.height) },
-
     onMouseDown (event) {
-      if (this.isAnnotating) {
+      if (this.isAnnotating && this.selectedObject != null) {
         const { offsetX, offsetY } = event
         this.isPainting = true
         this.position = { offsetX, offsetY }
@@ -233,7 +294,7 @@ export default {
     },
     endPaintEvent () { if (this.isPainting) this.isPainting = false },
     onMouseMove (event) {
-      if (this.isPainting) {
+      if (this.isPainting && this.selectedObject != null) {
         const { offsetX, offsetY } = event
         const offSetData = { offsetX, offsetY }
         const positionInfo = {
@@ -266,12 +327,10 @@ export default {
         this.drawFrame()
       }
     },
-
     pause () {
       this.paused = true
       window.cancelAnimationFrame(this.animationFrameRequest)
     },
-
     reset () { this.goToFrame(0) },
     stepForward (numFrames) { if (this.currentFrame < this.frames.length - numFrames) this.goToFrame(this.currentFrame + numFrames) },
     stepBackward (numFrames) { if (this.currentFrame >= numFrames) this.goToFrame(this.currentFrame - numFrames) },
@@ -281,6 +340,7 @@ export default {
       this.drawFrame()
     },
 
+    /* Rendering/drawing methods */
     updateCanvasDimensions (e) {
       this.width = this.$refs.canvasWrapper.clientWidth
       this.height = this.width / 1280 * 720
@@ -289,7 +349,7 @@ export default {
 
     toggleSegmentations () {
       this.showSegmentations = !this.showSegmentations
-      if (this.showSegmentations) this.drawSegmentation(this.frames[this.currentFrame])
+      if (this.showSegmentations) this.drawSegmentation()
     },
 
     render () {
@@ -331,13 +391,13 @@ export default {
           img, 0, 0, this.width, this.height)
       }
 
-      if (this.showSegmentations && 'frame_segmentation' in frame) this.drawSegmentation(frame)
+      if (this.showSegmentations && 'frame_segmentation' in frame) this.drawSegmentation()
       this.drawAnnotation()
     },
 
-    drawSegmentation (frame) {
+    drawSegmentation () {
       let segmentationImg = new Image()
-      segmentationImg.src = frame.frame_segmentation.path
+      segmentationImg.src = this.frames[this.currentFrame].frame_segmentation.path
       segmentationImg.onload = () => {
         this.segmentationCanvasContext.imageSmoothingEnabled = false
         this.segmentationCanvasContext.drawImage(

@@ -17,8 +17,9 @@ class Video(models.Model):
         verbose_name = "video"
         verbose_name_plural = "videos"
 
-    id = models.CharField(max_length=30, primary_key=True)
+    name = models.CharField(max_length=100)
     dataset = models.CharField(max_length=100)
+    skip = models.BooleanField(default=False)
 
 
 class Frame(models.Model):
@@ -46,13 +47,13 @@ class FrameSegmentation(models.Model):
     file = models.CharField(max_length=300)
 
 
-class SegmentedObjectCategory(models.Model):
-    class Meta:
-        db_table = "segmented_object_categories"
-        verbose_name = "segmented_object_category"
-        verbose_name_plural = "segmented_object_categories"
+# class SegmentedObjectCategory(models.Model):
+#     class Meta:
+#         db_table = "segmented_object_categories"
+#         verbose_name = "segmented_object_category"
+#         verbose_name_plural = "segmented_object_categories"
 
-    name = models.CharField(max_length=30)
+#     name = models.CharField(max_length=30)
 
 
 class SegmentedObject(models.Model):
@@ -61,20 +62,26 @@ class SegmentedObject(models.Model):
         verbose_name = "segmented_object"
         verbose_name_plural = "segmented_objects"
 
-    category = models.ForeignKey(SegmentedObjectCategory,
-                                 on_delete=models.CASCADE,
-                                 related_name="segmented_objects",
-                                 related_query_name="segmented_object")
-    frame_segmentation = models.ForeignKey(FrameSegmentation,
-                                           on_delete=models.CASCADE,
-                                           related_name="segmented_objects",
-                                           related_query_name="segmented_object")
+    # category = models.ForeignKey(SegmentedObjectCategory,
+    #                              on_delete=models.CASCADE,
+    #                              related_name="segmented_objects",
+    #                              related_query_name="segmented_object")
+    # frame_segmentation = models.ForeignKey(FrameSegmentation,
+    #                                        on_delete=models.CASCADE,
+    #                                        related_name="segmented_objects",
+    #                                        related_query_name="segmented_object")
+    name = models.CharField(max_length=30)
+    color = models.CharField(max_length=30, blank=True, null=True)
+    video = models.ForeignKey(Video,
+                              on_delete=models.CASCADE,
+                              related_name="segmented_objects",
+                              related_query_name="segmented_object")
 
 
 def annotation_directory_path(instance, orig_filename):
     ext = orig_filename.split(".")[-1]
-    filename = f"{instance.frame.video.id}_{instance.frame.sequence_number}_{instance.user.username}.{ext}"
-    return f"{instance.frame.video.dataset}/occlusion_annotations/{instance.frame.video.id}/{filename}"
+    filename = f"{instance.frame.video.name}_{instance.frame.sequence_number}_{instance.segmented_object.id}_{instance.segmented_object.name}_{instance.segmented_object.color}_{instance.user.username}.{ext}"
+    return f"{instance.frame.video.dataset}/occlusion_annotations/{instance.frame.video.name}/{filename}"
 
 
 class OcclusionAnnotation(models.Model):
@@ -93,6 +100,15 @@ class OcclusionAnnotation(models.Model):
                               related_query_name="occlusion_annotation")
     file = models.ImageField(upload_to=annotation_directory_path,
                              max_length=300)
+    segmented_object = models.ForeignKey(
+        SegmentedObject,
+        on_delete=models.CASCADE,
+        related_name="occlusion_annotations",
+        related_query_name="occlusion_annotation",
+        blank=True,
+        null=True,
+        default=None
+    )
 
     def delete(self, *args, **kwargs):
         os.remove(os.path.join(settings.MEDIA_ROOT, self.file.name))

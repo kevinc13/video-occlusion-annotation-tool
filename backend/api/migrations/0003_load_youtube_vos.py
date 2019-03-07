@@ -12,7 +12,6 @@ def load_youtube_vos(apps, schema_editor):
     Frame = apps.get_model("api", "Frame")
     FrameSegmentation = apps.get_model("api", "FrameSegmentation")
     SegmentedObject = apps.get_model("api", "SegmentedObject")
-    SegmentedObjectCategory = apps.get_model("api", "SegmentedObjectCategory")
     
     # Read meta.json
     with open(f"{base_dir}/meta.json") as f:
@@ -37,22 +36,9 @@ def load_youtube_vos(apps, schema_editor):
                     seg.save()
 
         for obj in meta["videos"][video_id]["objects"].values():
-            try:
-                objectCategory = SegmentedObjectCategory.objects.get(
-                    name=obj["category"])
-            except ObjectDoesNotExist:
-                objectCategory = SegmentedObjectCategory(name=obj["category"])
-                objectCategory.save()
-            
-            frame_seq_numbers = [int(f) for f in obj["frames"]]
-            
-            for frame_seq_number in frame_seq_numbers:
-                seg = FrameSegmentation.objects.get(
-                    frame__video=video,
-                    frame__sequence_number=frame_seq_number)
-                segmentedObject = SegmentedObject(
-                    category=objectCategory, frame_segmentation=seg)
-                segmentedObject.save()
+            segmentedObject = SegmentedObject(
+                name=obj["category"], video=video)
+            segmentedObject.save()
 
 
 def remove_youtube_vos(apps, schema_editor):
@@ -63,7 +49,7 @@ def remove_youtube_vos(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0001_initial'),
+        ('api', '0002_load_DAVIS'),
     ]
 
     operations = [

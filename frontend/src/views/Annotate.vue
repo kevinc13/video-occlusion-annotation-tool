@@ -5,15 +5,50 @@
         <div class="level">
           <div class="level-left">
             <h1 class="is-size-3">
-              Video ID: <strong>{{ video.id }}</strong> | Dataset: <strong>{{ video.dataset }}</strong>
+              Video: <strong>{{ video.name }}</strong> | Dataset: <strong>{{ video.dataset }}</strong>
             </h1>
           </div><!-- ../level-left -->
           <div class="level-right">
             <div class="buttons has-addons">
               <router-link to="/" class="button">Video List</router-link>
-              <button class="button">Next Video</button>
+              <button class="button is-danger"
+                v-if="!video.skip"
+                v-shortkey="['x']"
+                @shortkey="setVideoSkipStatus(true)"
+                @click="setVideoSkipStatus(true)">Skip (x)</button>
+              <button class="button"
+                v-else
+                v-shortkey="['u']"
+                @shortkey="setVideoSkipStatus(false)"
+                @click="setVideoSkipStatus(false)">Un-skip (u)</button>
+              <button class="button"
+                v-show="hasPrev"
+                v-shortkey="['arrowleft']"
+                @shortkey="prevVideo"
+                @click="prevVideo">Prev (&leftarrow;)</button>
+              <button class="button"
+                v-show="hasNext"
+                v-shortkey="['arrowright']"
+                @shortkey="nextVideo"
+                @click="nextVideo">Next (&rightarrow;)</button>
             </div>
           </div><!-- ./level-right -->
+        </div><!-- ./level -->
+        <div class="level" style="flex-wrap: wrap;">
+          <div class="level-item" v-for="obj in video.segmented_objects" :key="obj.id">
+            <p style="margin-right:1rem;">
+              <strong>ID: {{ obj.id }} | {{ obj.name }}</strong>
+            </p>
+            <b-select placeholder="Color" v-model="obj.color" @change.native="updateColor(obj.id)">
+              <option value="red">Red</option>
+              <option value="blue">Blue</option>
+              <option value="orange">Orange</option>
+              <option value="yellow">Yellow</option>
+              <option value="green">Green</option>
+              <option value="pink">Pink</option>
+              <option value="teal">Teal</option>
+            </b-select>
+          </div><!-- ./level-item -->
         </div><!-- ./level -->
         <player :user="user" :video="video" v-show="!loading"></player>
       </div><!-- ./box -->
@@ -27,32 +62,49 @@ import Player from '@/components/Player'
 
 export default {
   name: 'Annotate',
-  props: ['user'],
+  props: {
+    user: { type: Object },
+    idx: {
+      type: Number,
+      default: () => { return 0 }
+    },
+    videoId: {
+      type: Number
+    },
+    videos: {
+      type: Array,
+      default: () => { return [] }
+    }
+  },
   components: { Player },
 
   data () {
     return {
       video: {
-        id: '',
+        id: -1,
         dataset: '',
-        frames: []
+        frames: [],
+        segmented_objects: []
       },
       loading: false
     }
   },
 
   watch: {
-    '$route' (to, old) {
-      if ('videoId' in to.params) {
-        this.getVideo()
-      }
+    videoId (to) {
+      this.getVideo(to)
     }
   },
 
+  computed: {
+    hasNext () { return this.idx < this.videos.length - 1 },
+    hasPrev () { return this.idx > 0 }
+  },
+
   methods: {
-    getVideo () {
+    getVideo (id) {
       this.loading = true
-      API.get(`videos/${this.$route.params.videoId}`)
+      API.get(`videos/${id}`)
         .then(response => {
           this.video = response.data
           this.loading = false
@@ -60,11 +112,55 @@ export default {
         .catch(e => {
           console.log(e)
         })
+    },
+
+    prevVideo () {
+      if (this.hasPrev) {
+        let idx = this.idx - 1
+        this.$router.push({
+          name: 'annotate',
+          params: {
+            videoId: this.videos[idx].id,
+            idx: idx,
+            videos: this.videos
+          }
+        })
+      }
+    },
+    nextVideo () {
+      if (this.hasNext) {
+        let idx = this.idx + 1
+        this.$router.push({
+          name: 'annotate',
+          params: {
+            videoId: this.videos[idx].id,
+            idx: idx,
+            videos: this.videos
+          }
+        })
+      }
+    },
+
+    setVideoSkipStatus (status) {
+      API.patch(`videos/${this.videoId}`, { skip: status })
+        .then(response => {
+          this.video.skip = status
+        })
+        .catch(e => console.log(e))
+    },
+
+    updateColor (id) {
+      let color = this.video.segmented_objects.filter(o => o.id === id)[0].color
+      API.patch(`segmented_objects/${id}`, { color: color })
+        .then(response => {
+          console.log('changed object color')
+        })
+        .catch(e => console.log(e))
     }
   },
 
   mounted () {
-    this.getVideo()
+    this.getVideo(this.videoId)
   }
 }
 </script>
