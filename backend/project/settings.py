@@ -15,6 +15,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # -----------------------------------------------------------------------------
 ENV_FILE = os.environ.get(
     "DJANGO_ENV_FILE", default=os.path.join(BASE_DIR, "project/env.json"))
+
 with open(ENV_FILE) as f:
     env_data = json.load(f)
 
@@ -142,7 +143,7 @@ USE_TZ = True
 # Media Files
 # -----------------------------------------------------------------------------
 MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), "media")
-MEDIA_URL = "/media/"
+MEDIA_URL = env("MEDIA_URL", "/media/") 
 
 # -----------------------------------------------------------------------------
 # Static Files (i.e. CSS, images, JavaScript)

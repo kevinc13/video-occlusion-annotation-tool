@@ -47,7 +47,7 @@
               <option value="green">Green</option>
               <option value="pink">Pink</option>
               <option value="teal">Teal</option>
-            </b-select>
+          </b-select>
           </div><!-- ./level-item -->
         </div><!-- ./level -->
         <player :user="user" :video="video" v-show="!loading"></player>
