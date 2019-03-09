@@ -6,7 +6,7 @@ import os, json
 
 def load_youtube_vos(apps, schema_editor):
     base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
-        os.path.abspath(__file__))))) + "/media/DAVIS"
+        os.path.dirname(os.path.abspath(__file__)))))) + "/media/DAVIS"
 
     Video = apps.get_model("api", "Video")
     Frame = apps.get_model("api", "Frame")
