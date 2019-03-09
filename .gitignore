@@ -8,3 +8,5 @@ public/
 
 # Ignore media directory
 media/
+
+server/
