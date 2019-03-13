@@ -15,5 +15,5 @@ $footer-background-color: none;
 
 $family-sans-serif: BlinkMacSystemFont, -apple-system, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
 
-@import "~bulma/bulma";
-// @import "~buefy/src/scss/buefy";
+@import "~bulma";
+@import "~buefy/src/scss/buefy";
