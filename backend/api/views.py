@@ -8,6 +8,8 @@ from rest_framework import generics, mixins
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.filters import OrderingFilter
 
 from .models import User, Video, OcclusionAnnotation, SegmentedObject
 from .serializers import (
@@ -21,7 +23,21 @@ class VideoList(generics.ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = BasicVideoSerializer
     queryset = Video.objects.all()
-    pagination_class = None
+    pagination_class = PageNumberPagination
+    filter_backends = (OrderingFilter,)
+
+    def paginate_queryset(self, queryset):
+        """
+        Return a single page of results, or `None` if pagination is disabled.
+        """
+        if self.paginator is None:
+            return None
+        
+        limit = self.request.query_params.get("limit", None)
+        if limit is not None:
+            self.pagination_class.page_size = limit
+
+        return self.paginator.paginate_queryset(queryset, self.request, view=self)
 
 
 class VideoDetail(generics.RetrieveUpdateAPIView):

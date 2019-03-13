@@ -72,6 +72,7 @@ class SegmentedObject(models.Model):
     #                                        related_query_name="segmented_object")
     name = models.CharField(max_length=30)
     color = models.CharField(max_length=30, blank=True, null=True)
+    color_number = models.IntegerField(blank=True, null=True)
     video = models.ForeignKey(Video,
                               on_delete=models.CASCADE,
                               related_name="segmented_objects",

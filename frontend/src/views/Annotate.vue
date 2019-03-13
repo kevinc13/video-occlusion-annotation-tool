@@ -10,7 +10,7 @@
           </div><!-- ../level-left -->
           <div class="level-right">
             <div class="buttons has-addons">
-              <router-link to="/" class="button">Video List</router-link>
+              <router-link :to="{ name: 'main', query: backQueryParams }" class="button">Video List</router-link>
               <button class="button is-danger"
                 v-if="!video.skip"
                 v-shortkey="['x']"
@@ -41,12 +41,17 @@
             </p>
             <b-select placeholder="Color" v-model="obj.color" @change.native="updateColor(obj.id)">
               <option value="red">Red</option>
-              <option value="blue">Blue</option>
               <option value="orange">Orange</option>
               <option value="yellow">Yellow</option>
               <option value="green">Green</option>
+              <option value="blue">Blue</option>
+              <option value="purple">Purple</option>
+              <option value="indigo">Indigo</option>
+              <option value="violet">Violet</option>
               <option value="pink">Pink</option>
+              <option value="cyan">Cyan</option>
               <option value="teal">Teal</option>
+              <option value="grey">Grey</option>
           </b-select>
           </div><!-- ./level-item -->
         </div><!-- ./level -->
@@ -74,6 +79,10 @@ export default {
     videos: {
       type: Array,
       default: () => { return [] }
+    },
+    backQueryParams: {
+      type: Object,
+      default: () => { return {} }
     }
   },
   components: { Player },

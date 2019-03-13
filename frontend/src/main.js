@@ -16,7 +16,9 @@ window.flash = (message, type = 'is-success') => {
   window.events.$emit('flash', { message, type })
 }
 
-Vue.use(Buefy)
+Vue.use(Buefy, {
+  defaultIconPack: 'fas'
+})
 Vue.use(require('vue-shortkey'))
 
 new Vue({

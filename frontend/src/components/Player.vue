@@ -119,7 +119,8 @@
           <button class="button is-primary"
             v-shortkey.once="['s']"
             @shortkey="saveAnnotation"
-            @click="saveAnnotation">Save (s)</button>
+            @click="saveAnnotation"
+            :disabled="selectedObject == null || selectedObject.color == null">Save (s)</button>
         </div><!-- ./level-right -->
       </div><!-- ./level -->
     </div><!-- ./column -->
@@ -254,7 +255,7 @@ export default {
       this.isAnnotating = false
     },
     saveAnnotation () {
-      if (!this.isAnnotating || this.selectedObject == null) return
+      if (!this.isAnnotating || this.selectedObject == null || this.selectedObject.color == null) return
 
       this.clear(this.outputCanvasContext)
       this.outputCanvasContext.drawImage(

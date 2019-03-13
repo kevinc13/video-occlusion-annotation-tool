@@ -6,6 +6,8 @@ import Annotate from './views/Annotate.vue'
 Vue.use(Router)
 
 export default new Router({
+  mode: 'history',
+  base: '/app',
   routes: [
     {
       path: '/',

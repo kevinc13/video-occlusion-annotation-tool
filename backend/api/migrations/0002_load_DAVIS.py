@@ -4,7 +4,7 @@ from django.db.models import ObjectDoesNotExist
 import os, json
 
 
-def load_youtube_vos(apps, schema_editor):
+def load_davis(apps, schema_editor):
     base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
         os.path.dirname(os.path.abspath(__file__)))))) + "/media/DAVIS"
 
@@ -40,14 +40,15 @@ def load_youtube_vos(apps, schema_editor):
                     seg.save()
 
         if video_name in objects.keys():
-            for _, obj in objects[video_name].items():
-                segmentedObject = SegmentedObject(name=obj, video=video)
+            for color_number, obj in objects[video_name].items():
+                segmentedObject = SegmentedObject(
+                    name=obj, video=video, color_number=int(color_number))
                 segmentedObject.save()
 
 
-def remove_youtube_vos(apps, schema_editor):
+def remove_davis(apps, schema_editor):
     Video = apps.get_model("api", "Video")
-    Video.objects.all().delete()
+    Video.objects.filter(dataset="DAVIS").delete()
 
 
 class Migration(migrations.Migration):
@@ -57,5 +58,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(load_youtube_vos, remove_youtube_vos)
+        migrations.RunPython(load_davis, remove_davis)
     ]
