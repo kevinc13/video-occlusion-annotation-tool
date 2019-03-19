@@ -81,7 +81,7 @@ class SegmentedObject(models.Model):
 
 def annotation_directory_path(instance, orig_filename):
     ext = orig_filename.split(".")[-1]
-    filename = f"{instance.frame.video.name}_{instance.frame.sequence_number}_{instance.segmented_object.id}_{instance.segmented_object.name}_{instance.segmented_object.color}_{instance.user.username}.{ext}"
+    filename = f"{instance.frame.video.name}_{instance.frame.sequence_number}_{instance.segmented_object.id}-{instance.segmented_object.name}_{instance.user.username}.{ext}"
     return f"{instance.frame.video.dataset}/occlusion_annotations/{instance.frame.video.name}/{filename}"
 
 
