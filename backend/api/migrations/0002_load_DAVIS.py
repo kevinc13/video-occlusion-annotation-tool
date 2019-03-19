@@ -16,8 +16,13 @@ def load_davis(apps, schema_editor):
     skipped_videos = ["hike","mallard-fly","upside-down","mallard-water","dance-twirl","stroller","dog","bear","rollerblade","camel","drift-chicane","parkour","goat","breakdance","car-roundabout","drift-turn","breakdance-flare","drift-straight","paragliding","rallye","flamingo","car-turn","lab-coat","car-shadow","blackswan","elephant"]
 
     # Read semantics file
-    with open(f"{base_dir}/davis_semantics.json") as f:
+    with open(f"{base_dir}/objects.json") as f:
         objects = json.load(f)
+
+    palette = []
+    with open(f"{base_dir}/palette.txt") as f:
+        for line in f:
+            palette.append([int(n) for n in line.split(" ")])
     
     video_names = [d.name for d in os.scandir(
         f"{base_dir}/frames") if d.is_dir()]
@@ -41,8 +46,11 @@ def load_davis(apps, schema_editor):
 
         if video_name in objects.keys():
             for color_number, obj in objects[video_name].items():
+                color_number = int(color_number)
+                hex_color = '#%02x%02x%02x' % tuple(palette[color_number])
                 segmentedObject = SegmentedObject(
-                    name=obj, video=video, color_number=int(color_number))
+                    name=obj, video=video, color_number=color_number,
+                    color=hex_color)
                 segmentedObject.save()
 
 

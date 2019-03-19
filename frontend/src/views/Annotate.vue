@@ -39,20 +39,7 @@
             <p style="margin-right:1rem;">
               <strong>ID: {{ obj.id }} | {{ obj.name }}</strong>
             </p>
-            <b-select placeholder="Color" v-model="obj.color" @change.native="updateColor(obj.id)">
-              <option value="red">Red</option>
-              <option value="orange">Orange</option>
-              <option value="yellow">Yellow</option>
-              <option value="green">Green</option>
-              <option value="blue">Blue</option>
-              <option value="purple">Purple</option>
-              <option value="indigo">Indigo</option>
-              <option value="violet">Violet</option>
-              <option value="pink">Pink</option>
-              <option value="cyan">Cyan</option>
-              <option value="teal">Teal</option>
-              <option value="grey">Grey</option>
-          </b-select>
+            <div class="color-square" :style="{ 'background-color': obj.color }"></div>
           </div><!-- ./level-item -->
         </div><!-- ./level -->
         <player :user="user" :video="video" v-show="!loading"></player>
@@ -60,6 +47,13 @@
     </div><!-- ./container -->
   </section>
 </template>
+
+<style>
+.color-square {
+  width: 25px;
+  height: 25px;
+}
+</style>
 
 <script>
 import { API } from '@/api'
@@ -154,15 +148,6 @@ export default {
       API.patch(`videos/${this.videoId}`, { skip: status })
         .then(response => {
           this.video.skip = status
-        })
-        .catch(e => console.log(e))
-    },
-
-    updateColor (id) {
-      let color = this.video.segmented_objects.filter(o => o.id === id)[0].color
-      API.patch(`segmented_objects/${id}`, { color: color })
-        .then(response => {
-          console.log('changed object color')
         })
         .catch(e => console.log(e))
     }

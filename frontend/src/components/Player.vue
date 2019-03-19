@@ -29,7 +29,7 @@
         <div class="level-left">
           <div class="level-item has-addons">
             <button class="button is-light"
-                v-shortkey="['shift', '[']"
+                v-shortkey="['shift', '{']"
                 @shortkey="stepBackward(5)"
                 @click="stepBackward(5)">
               <span class="icon">
@@ -108,8 +108,8 @@
         <div class="level-right">
           <div class="level-item">
             <button class="button is-light" v-shortkey.once="['c']"
-              @shortkey="clear(annotationCanvasContext)"
-              @click="clear(annotationCanvasContext)">Clear (c)</button>
+              @shortkey="clearAnnotationCanvas"
+              @click="clearAnnotationCanvas">Clear (c)</button>
           </div><!-- ./level-item -->
           <div class="level-item">
             <button class="button is-light" v-shortkey.once="['esc']"
@@ -120,7 +120,7 @@
             v-shortkey.once="['s']"
             @shortkey="saveAnnotation"
             @click="saveAnnotation"
-            :disabled="selectedObject == null || selectedObject.color == null">Save (s)</button>
+            :disabled="!hasPainted || selectedObject == null || selectedObject.color == null">Save (s)</button>
         </div><!-- ./level-right -->
       </div><!-- ./level -->
     </div><!-- ./column -->
@@ -138,8 +138,9 @@
             <td>{{ annotation.user.username }}</td>
             <td>{{ annotation.segmented_object.name }} - {{ annotation.segmented_object.id }}</td>
             <td class="has-addons">
-              <button v-show="annotation.user.id == user.id"
+              <button v-if="annotation.user.id == user.id"
                     class="button is-small is-danger" @click="removeAnnotation(annotation.id)">Remove</button>
+              <a v-else :href="annotation.path" class="button is-small">Link</a>
             </td>
           </tr>
         </tbody>
@@ -197,6 +198,7 @@ export default {
       isAnnotating: false, // whether we are in annotation mode
       brushSize: 20, // brush size of annotation
       isPainting: false,
+      hasPainted: false,
       position: {
         offsetX: 0,
         offsetY: 0
@@ -239,9 +241,11 @@ export default {
         this.frames = this.video.frames.slice().sort((a, b) => {
           return a.sequence_number - b.sequence_number
         })
-        this.reset()
+        if (this.frames.length > 0) this.reset()
       }
-    }
+    },
+
+    selectedObject () { this.clearAnnotationCanvas() }
   },
 
   methods: {
@@ -269,7 +273,7 @@ export default {
       }).then(response => {
         this.frames[this.currentFrame].occlusion_annotations.push(response.data)
         this.clear(this.annotationCanvasContext)
-        this.stepForward(1)
+        // this.stepForward(1)
       }).catch(e => {
         console.log(e)
       })
@@ -286,9 +290,14 @@ export default {
         })
     },
     clear (context) { context.clearRect(0, 0, context.canvas.width, context.canvas.height) },
+    clearAnnotationCanvas () {
+      this.clear(this.annotationCanvasContext)
+      this.hasPainted = false
+    },
     onMouseDown (event) {
       if (this.isAnnotating && this.selectedObject != null) {
         const { offsetX, offsetY } = event
+        this.hasPainted = true
         this.isPainting = true
         this.position = { offsetX, offsetY }
       }
