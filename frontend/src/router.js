@@ -23,6 +23,16 @@ export default new Router({
         props.videoId = Number(props.videoId)
         return props
       }
+    },
+    {
+      path: '/review/:videoId',
+      name: 'review',
+      component: () => import('./views/Review.vue'),
+      props (route) {
+        const props = { ...route.params }
+        props.videoId = Number(props.videoId)
+        return props
+      }
     }
   ]
 })

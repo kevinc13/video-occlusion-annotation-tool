@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.filters import OrderingFilter
+from rest_framework.filters import OrderingFilter, SearchFilter
 
 from .models import (
     User, Video, OcclusionAnnotation, SegmentedObject, OcclusionFlag
@@ -26,7 +26,8 @@ class VideoList(generics.ListAPIView):
     serializer_class = BasicVideoSerializer
     queryset = Video.objects.all()
     pagination_class = PageNumberPagination
-    filter_backends = (OrderingFilter,)
+    search_fields = ('name', 'dataset')
+    filter_backends = (OrderingFilter, SearchFilter)
 
     def paginate_queryset(self, queryset):
         """

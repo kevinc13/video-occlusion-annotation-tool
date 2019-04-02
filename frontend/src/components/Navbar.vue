@@ -1,8 +1,8 @@
 <template>
-  <nav class="navbar is-light" role="navigation" aria-label="main navigation">
+  <nav class="navbar is-dark" role="navigation" aria-label="main navigation">
     <div class="container is-fluid">
       <div class="navbar-brand">
-        <a href="/" class="navbar-item"><span class="is-size-5">Vondrick Lab | Video Occlusion Annotation Tool</span></a>
+        <span class="navbar-item is-size-5">Vondrick Lab</span>
       </div><!-- end navbar-brand -->
 
       <div class="navbar-menu">

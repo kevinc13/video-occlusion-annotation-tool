@@ -18,15 +18,13 @@
       <div class="column is-three-quarters">
         <!-- Output canvas, used for resizing (hidden) -->
         <div ref="canvasWrapper">
-          <canvas ref="outputCanvas" style="display: none;" width="1280" height="720"></canvas>
           <div class="canvas-layers" :style="{ 'width': width + 'px', 'height': height + 'px' }">
             <canvas ref="videoCanvas" id="videoCanvas"
               :width="width" :height="height"></canvas>
             <canvas ref="segmentationCanvas" id="segmentationCanvas"
               :width="width" :height="height" v-show="showSegmentations"></canvas>
-            <canvas ref="annotationCanvas" id="annotationCanvas" :width="width" :height="height"
-              @mousedown="onMouseDown" @mousemove="onMouseMove"
-              @mouseup="endPaintEvent" @mouseleave="endPaintEvent"></canvas>
+            <canvas ref="annotationCanvas" id="annotationCanvas"
+              :width="width" :height="height"></canvas>
           </div><!-- ./canvas-layers -->
         </div>
         <!-- Playback information -->
@@ -43,55 +41,28 @@
         <div class="level">
           <div class="level-left">
             <div class="level-item has-addons">
-              <b-tooltip label="[Shift + Space]" position="is-bottom" type="is-dark">
-                <button class="button is-light"
-                        v-shortkey="['shift', 'space']"
-                        @shortkey="prev()"
-                        @click="prev()"
-                        v-show="hasPrevFrame || hasPrevObject">
-                  Prev
-                </button>
-              </b-tooltip>
-              <b-tooltip label="[Space]" position="is-bottom" type="is-dark">
-                <button class="button is-light"
-                    v-shortkey="['space']"
-                    @shortkey="next()"
-                    @click="next()"
-                    v-show="hasNextFrame || hasNextObject">
-                  Next
-                </button>
-              </b-tooltip>
+              <button class="button is-light"
+                      @click="prev()"
+                      v-show="hasPrevFrame || hasPrevObject">
+                Prev
+              </button>
+              <button class="button is-light"
+                      @click="next()"
+                      v-show="hasNextFrame || hasNextObject">
+                Next
+              </button>
             </div>
           </div><!-- ./level-left -->
           <div class="level-right">
             <button class="button is-light"
-                v-shortkey.once="['t']"
-                @shortkey="toggleSegmentations"
-                @click="toggleSegmentations">Toggle Segmentations [T]</button>
+                @click="toggleSegmentations">Toggle Segmentations</button>
           </div><!-- ./level-right -->
         </div><!-- ./level -->
       </div><!-- ./column -->
 
       <div class="column">
         <header class="subtitle">Frame Annotation</header>
-        <label class="label">Occluded?</label>
-        <div class="field has-addons">
-          <b-radio-button v-model="currentOcclusionFlag" :native-value="0">No</b-radio-button>
-          <b-radio-button v-model="currentOcclusionFlag" :native-value="1">Partially</b-radio-button>
-          <b-radio-button v-model="currentOcclusionFlag" :native-value="2">Fully</b-radio-button>
-        </div><!-- ./field -->
-        <div v-show="currentOcclusionFlag > 0">
-          <div class="field">
-            <label class="label">Brush Size</label>
-            <input type="range" min="1" max="100" v-model="brushSize">
-          </div>
-          <button class="button is-light" v-shortkey.once="['c']"
-              @shortkey="clearAnnotationCanvas"
-              @click="clearAnnotationCanvas" v-if="!currentUserAnnotation">Clear [C]</button>
-          <button class="button is-danger"
-              @click="removeAnnotation"
-              v-else>Remove Annotation</button>
-        </div>
+        <label class="label">Occluded: {{ currentOcclusionFlag }}</label>
       </div><!-- ./column -->
     </div><!-- ./columns -->
   </div><!-- ./guided-player -->
@@ -121,10 +92,9 @@
 
 <script>
 import _ from 'lodash'
-import { API } from '@/api'
 
 export default {
-  name: 'GuidedPlayer',
+  name: 'Player',
   props: {
     'user': { type: Object },
     'video': { type: Object }
@@ -142,17 +112,7 @@ export default {
       currentFrameIdx: 0, // current frame idx
       stepSize: 3,
       showSegmentations: true, // whether to show segmentation overlay
-      showAnnotations: true, // whether to show annotation overlay
-      animationFrameRequest: null, // window animation frame request
-
-      brushSize: 20, // brush size of annotation
-      isPainting: false,
-      hasPainted: false,
-      position: {
-        offsetX: 0,
-        offsetY: 0
-      },
-      line: []
+      animationFrameRequest: null // window animation frame request
     }
   },
 
@@ -177,32 +137,20 @@ export default {
       })
       return (annotation.length > 0) ? annotation[0] : null
     },
-
-    brushColor () {
-      if (this.selectedObject != null && this.selectedObject.color != null) {
-        return this.selectedObject.color
-      } else {
-        return null
-      }
-    },
     currentOcclusionFlag: {
       get () {
         if (this.currentFrame) {
           let flags = this.currentFrame.user_occlusion_flags.filter(f => f.segmented_object_id === this.selectedObject.id)
-          if (flags.length > 0) return flags[0].occluded
+          if (flags.length > 0) {
+            let flag = flags[0].occluded
+            if (flag === 0) return 'No'
+            if (flag === 1) return 'Partially'
+            if (flag === 2) return 'Fully'
+          }
         }
-        return -1
-      },
-      set (newValue) {
-        let flag = this.currentFrame.user_occlusion_flags.filter(f => f.segmented_object_id === this.selectedObject.id)
-        if (flag.length >= 1) {
-          this.updateOcclusionFlag(flag[0].id, newValue)
-        } else {
-          this.addOcclusionFlag(newValue)
-        }
+        return 'Not specified'
       }
     },
-    isAnnotating () { return this.currentOcclusionFlag > 0 },
     ready () {
       return {
         userReady: !_.isEmpty(this.user),
@@ -231,113 +179,10 @@ export default {
   },
 
   methods: {
-    /* Annotation mode methods  */
-    addOcclusionFlag (status) {
-      API.post(`occlusion_flags/`, {
-        frame: this.currentFrame.id,
-        segmented_object_id: this.selectedObject.id,
-        occluded: status
-      }).then(response => {
-        let flag = response.data
-        this.currentFrame.user_occlusion_flags.push({
-          id: flag.id,
-          occluded: flag.occluded,
-          segmented_object_id: flag.segmented_object_id
-        })
-      })
-    },
-    updateOcclusionFlag (flagId, status) {
-      API.patch(`occlusion_flags/${flagId}`, { occluded: status })
-        .then(response => {
-          let flag = this.currentFrame.user_occlusion_flags.find(f => f.id === flagId)
-          flag.occluded = status
-        })
-    },
-    saveAnnotation () {
-      console.log('Saving annotation for frame ' + this.currentFrame.sequence_number)
-      this.clear(this.outputCanvasContext)
-      this.outputCanvasContext.drawImage(
-        this.$refs.annotationCanvas, 0, 0,
-        this.$refs.outputCanvas.width, this.$refs.outputCanvas.height)
-      let annotationImg = this.$refs.outputCanvas.toDataURL('image/png')
-      let currentFrame = this.currentFrame
-      API.post('annotations/', {
-        frame: this.currentFrame.id,
-        file: annotationImg,
-        segmented_object_id: this.selectedObject.id
-      }).then(response => {
-        currentFrame.user_occlusion_annotations.push(response.data)
-      }).catch(e => {
-        console.log(e)
-      })
-    },
-    updateAnnotation () {
-      console.log('Updating annotation for frame ' + this.currentFrame.sequence_number)
-      this.clear(this.outputCanvasContext)
-      this.outputCanvasContext.drawImage(
-        this.$refs.annotationCanvas, 0, 0,
-        this.$refs.outputCanvas.width, this.$refs.outputCanvas.height)
-      let annotationImg = this.$refs.outputCanvas.toDataURL('image/png')
-      let id = this.currentUserAnnotation.id
-      API.patch(`annotations/${id}`, {
-        file: annotationImg
-      }).catch(e => {
-        console.log(e)
-      })
-    },
-    removeAnnotation () {
-      let annotation = this.currentUserAnnotation
-      let currentFrame = this.currentFrame
-      if (!_.isEmpty(annotation)) {
-        API.delete(`annotations/${annotation.id}`)
-          .then(response => {
-            currentFrame.user_occlusion_annotations = currentFrame.user_occlusion_annotations.filter(a => {
-              return a.id !== annotation.id
-            })
-            this.clear(this.annotationCanvasContext)
-          }).catch(e => {
-            console.log(e)
-          })
-      }
-    },
     clear (context) { context.clearRect(0, 0, context.canvas.width, context.canvas.height) },
     clearAnnotationCanvas () {
       this.clear(this.annotationCanvasContext)
       this.hasPainted = false
-    },
-    onMouseDown (event) {
-      if (this.isAnnotating && this.selectedObject != null) {
-        const { offsetX, offsetY } = event
-        this.hasPainted = true
-        this.isPainting = true
-        this.position = { offsetX, offsetY }
-      }
-    },
-    endPaintEvent () { if (this.isPainting) this.isPainting = false },
-    onMouseMove (event) {
-      if (this.isPainting && this.selectedObject != null) {
-        const { offsetX, offsetY } = event
-        const offSetData = { offsetX, offsetY }
-        const positionInfo = {
-          start: { ...this.position },
-          stop: { ...offSetData }
-        }
-        this.line = this.line.concat(positionInfo)
-        this.paint(offSetData)
-      }
-    },
-    paint (currentPosition) {
-      const { offsetX, offsetY } = currentPosition
-      const { offsetX: x, offsetY: y } = this.position
-      this.annotationCanvasContext.beginPath()
-      this.annotationCanvasContext.lineWidth = this.brushSize
-      this.annotationCanvasContext.lineJoin = 'round'
-      this.annotationCanvasContext.lineCap = 'round'
-      this.annotationCanvasContext.strokeStyle = this.brushColor
-      this.annotationCanvasContext.moveTo(x, y)
-      this.annotationCanvasContext.lineTo(offsetX, offsetY)
-      this.annotationCanvasContext.stroke()
-      this.position = { offsetX, offsetY }
     },
 
     /* Playback methods */
@@ -357,21 +202,10 @@ export default {
     },
 
     next () {
-      if (this.isAnnotating && this.hasPainted) {
-        if (this.currentUserAnnotation) {
-          this.updateAnnotation()
-        } else {
-          this.saveAnnotation()
-        }
-        this.clearAnnotationCanvas()
-      }
-
       if (this.hasNextFrame) {
         this.nextFrame()
       } else if (this.hasNextObject) {
         this.nextObject()
-      } else {
-        this.$emit('reachedAnnotationEnd')
       }
     },
     prev () {
@@ -439,7 +273,6 @@ export default {
   },
 
   mounted () {
-    this.outputCanvasContext = this.$refs.outputCanvas.getContext('2d')
     this.videoCanvasContext = this.$refs.videoCanvas.getContext('2d')
     this.segmentationCanvasContext = this.$refs.segmentationCanvas.getContext('2d')
     this.annotationCanvasContext = this.$refs.annotationCanvas.getContext('2d')

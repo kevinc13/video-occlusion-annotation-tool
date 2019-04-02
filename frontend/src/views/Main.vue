@@ -49,17 +49,22 @@
             </div>
           </div><!-- ./level-left -->
           <div class="level-right">
-            <b-dropdown v-model="pagination.limit" position="is-bottom-left">
-              <button class="button" slot="trigger">
-                <span>Limit: {{ pagination.limit }}</span>
-                <span class="icon is-small">
-                  <i class="fas fa-angle-down" aria-hidden="true"></i>
-                </span>
-              </button>
-              <b-dropdown-item :value="10">10</b-dropdown-item>
-              <b-dropdown-item :value="15">15</b-dropdown-item>
-              <b-dropdown-item :value="20">20</b-dropdown-item>
-            </b-dropdown>
+            <div class="level-item">
+              <input type="search" class="input" placeholder="Search for video or dataset" v-model="requestParams.search">
+            </div>
+            <div class="level-item">
+              <b-dropdown v-model="pagination.limit" position="is-bottom-left">
+                <button class="button" slot="trigger">
+                  <span>Limit: {{ pagination.limit }}</span>
+                  <span class="icon is-small">
+                    <i class="fas fa-angle-down" aria-hidden="true"></i>
+                  </span>
+                </button>
+                <b-dropdown-item :value="10">10</b-dropdown-item>
+                <b-dropdown-item :value="15">15</b-dropdown-item>
+                <b-dropdown-item :value="20">20</b-dropdown-item>
+              </b-dropdown>
+            </div><!-- ./level-item -->
           </div><!-- ./level-right -->
         </div><!-- ./level -->
         <b-table
@@ -71,6 +76,8 @@
           :total="pagination.total"
           :per-page="pagination.limit"
           @page-change="onPageChange"
+
+          :row-class="(row, index) => row.skip && 'is-skipped'"
 
           backend-sorting
           default-sort-direction="asc"
@@ -100,6 +107,10 @@
                 name: 'annotate',
                 params: { backQueryParams: requestParams, videoId: props.row.id}
                 }" class="button is-primary is-small">Annotate</router-link>
+              <router-link :to="{
+                name: 'review',
+                params: { backQueryParams: requestParams, videoId: props.row.id}
+                }" class="button is-small">Review</router-link>
             </b-table-column>
           </template>
         </b-table>
@@ -108,9 +119,8 @@
   </section>
 </template>
 
-<style scoped>
-.is-annotated { background-color: rgba(35, 209, 96, .2); }
-.is-skipped { background-color: rgba(255, 5, 55, .2); }
+<style>
+tr.is-skipped { background-color: rgba(255, 5, 55, .1); }
 </style>
 
 <script>
@@ -133,7 +143,8 @@ export default {
       requestParams: {
         page: 1,
         ordering: 'id',
-        limit: 10
+        limit: 10,
+        search: ''
       },
       pagination: {
         total: 0,
@@ -150,6 +161,11 @@ export default {
     },
     'stats.n_videos': function (val, _) {
       this.pagination.total = val
+    },
+    'requestParams.search': function (val, oldVal) {
+      this.requestParams.page = 1
+      this.updateQueryParams()
+      this.getVideos()
     }
   },
 
@@ -169,9 +185,11 @@ export default {
     },
 
     getVideos () {
-      API.get('videos', { params: this.requestParams })
+      let params = this.requestParams
+      API.get('videos', { params: params })
         .then(response => {
           if ('results' in response.data) {
+            this.pagination.total = response.data.count
             this.videos = response.data.results
           } else {
             this.videos = response.data
@@ -213,6 +231,7 @@ export default {
   created () {
     if ('page' in this.$route.query) this.requestParams.page = Number(this.$route.query.page)
     if ('limit' in this.$route.query) this.requestParams.limit = Number(this.$route.query.limit)
+    if ('search' in this.$route.query) this.requestParams.search = this.$route.query.search
 
     this.getVideos()
     this.getSummary()
