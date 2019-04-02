@@ -42,7 +42,7 @@ def load_youtube_vos_train(apps, schema_editor):
             color_index = int(color_index)
             hex_color = '#%02x%02x%02x' % tuple(palette[color_index])
             segmented_object = SegmentedObject(
-                name=obj, video=video, color_index=color_index,
+                name=obj_name, video=video, color_index=color_index,
                 color=hex_color)
             segmented_object.save()
 
