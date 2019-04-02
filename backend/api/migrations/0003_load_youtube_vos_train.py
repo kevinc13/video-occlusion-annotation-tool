@@ -12,10 +12,16 @@ def load_youtube_vos_train(apps, schema_editor):
     Frame = apps.get_model("api", "Frame")
     FrameSegmentation = apps.get_model("api", "FrameSegmentation")
     SegmentedObject = apps.get_model("api", "SegmentedObject")
+    OcclusionFlag = apps.get_model("api", "OcclusionFlag")
     
     # Read meta.json
     with open(f"{base_dir}/meta.json") as f:
         meta = json.load(f)
+
+    palette = []
+    with open(f"{base_dir}/palette.txt") as f:
+        for line in f:
+            palette.append([int(n) for n in line.split(" ")])
     
     video_names = [d.name for d in os.scandir(
         f"{base_dir}/frames") if d.is_dir()]
@@ -29,16 +35,26 @@ def load_youtube_vos_train(apps, schema_editor):
                 frame = Frame(video=video, sequence_number=int(filename),
                               file=f"YouTube-VOS-Train/frames/{video_name}/{file}")
                 frame.save()
+                    
 
-                if os.path.exists(f"{base_dir}/frame_segmentations/{video_name}/{filename}.png"):
+        for color_index, obj in meta["videos"][video_name]["objects"].items():
+            obj_name = obj["category"]
+            color_index = int(color_index)
+            hex_color = '#%02x%02x%02x' % tuple(palette[color_index])
+            segmented_object = SegmentedObject(
+                name=obj, video=video, color_index=color_index,
+                color=hex_color)
+            segmented_object.save()
+
+            for file in os.listdir(f"{base_dir}/frame_segmentations/{video_name}/{color_index}_{obj}"):
+                if file.endswith(".jpg") or file.endswith(".png"):
+                    filename = file.split(".")[0]
+                    frame = Frame.objects.get(video__name=video_name, sequence_number=int(filename))
                     seg = FrameSegmentation(
-                        frame=frame, file=f"YouTube-VOS-Train/frame_segmentations/{video_name}/{filename}.png")
+                        frame=frame,
+                        segmented_object=segmented_object,
+                        file=f"YouTube-VOS-Train/frame_segmentations/{video_name}/{color_index}_{obj}/{filename}.png")
                     seg.save()
-
-        for obj in meta["videos"][video_name]["objects"].values():
-            segmentedObject = SegmentedObject(
-                name=obj["category"], video=video)
-            segmentedObject.save()
 
 
 def remove_youtube_vos_train(apps, schema_editor):

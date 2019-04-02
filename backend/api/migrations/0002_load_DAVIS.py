@@ -12,6 +12,7 @@ def load_davis(apps, schema_editor):
     Frame = apps.get_model("api", "Frame")
     FrameSegmentation = apps.get_model("api", "FrameSegmentation")
     SegmentedObject = apps.get_model("api", "SegmentedObject")
+    OcclusionFlag = apps.get_model("api", "OcclusionFlag")
 
     skipped_videos = ["hike","mallard-fly","upside-down","mallard-water","dance-twirl","stroller","dog","bear","rollerblade","camel","drift-chicane","parkour","goat","breakdance","car-roundabout","drift-turn","breakdance-flare","drift-straight","paragliding","rallye","flamingo","car-turn","lab-coat","car-shadow","blackswan","elephant"]
 
@@ -39,19 +40,25 @@ def load_davis(apps, schema_editor):
                               file=f"DAVIS/frames/{video_name}/{file}")
                 frame.save()
 
-                if os.path.exists(f"{base_dir}/frame_segmentations/{video_name}/{filename}.png"):
-                    seg = FrameSegmentation(
-                        frame=frame, file=f"DAVIS/frame_segmentations/{video_name}/{filename}.png")
-                    seg.save()
-
         if video_name in objects.keys():
-            for color_number, obj in objects[video_name].items():
-                color_number = int(color_number)
-                hex_color = '#%02x%02x%02x' % tuple(palette[color_number])
-                segmentedObject = SegmentedObject(
-                    name=obj, video=video, color_number=color_number,
+            for color_index, obj in objects[video_name].items():
+                color_index = int(color_index)
+                hex_color = '#%02x%02x%02x' % tuple(palette[color_index])
+                segmented_object = SegmentedObject(
+                    name=obj, video=video, color_index=color_index,
                     color=hex_color)
-                segmentedObject.save()
+                segmented_object.save()
+
+                for file in os.listdir(f"{base_dir}/frame_segmentations/{video_name}/{color_index}_{obj}"):
+                    if file.endswith(".jpg") or file.endswith(".png"):
+                        filename = file.split(".")[0]
+                        frame = Frame.objects.get(video__name=video_name, sequence_number=int(filename))
+                        seg = FrameSegmentation(
+                            frame=frame,
+                            segmented_object=segmented_object,
+                            file=f"DAVIS/frame_segmentations/{video_name}/{color_index}_{obj}/{filename}.png")
+                        seg.save()
+
 
 
 def remove_davis(apps, schema_editor):

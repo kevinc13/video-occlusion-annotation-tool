@@ -3,6 +3,8 @@ from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 import os
 
+from .storage import OverwriteStorage
+
 
 class User(AbstractUser):
     class Meta:
@@ -36,26 +38,6 @@ class Frame(models.Model):
     file = models.CharField(max_length=300)
 
 
-class FrameSegmentation(models.Model):
-    class Meta:
-        db_table = "frame_segmentations"
-        verbose_name = "frame_segmentations"
-        verbose_name_plural = "frame_segmentation"
-
-    frame = models.OneToOneField(Frame, on_delete=models.CASCADE,
-                                 related_name="frame_segmentation")
-    file = models.CharField(max_length=300)
-
-
-# class SegmentedObjectCategory(models.Model):
-#     class Meta:
-#         db_table = "segmented_object_categories"
-#         verbose_name = "segmented_object_category"
-#         verbose_name_plural = "segmented_object_categories"
-
-#     name = models.CharField(max_length=30)
-
-
 class SegmentedObject(models.Model):
     class Meta:
         db_table = "segmented_objects"
@@ -71,18 +53,43 @@ class SegmentedObject(models.Model):
     #                                        related_name="segmented_objects",
     #                                        related_query_name="segmented_object")
     name = models.CharField(max_length=30)
-    color = models.CharField(max_length=30, blank=True, null=True)
-    color_number = models.IntegerField(blank=True, null=True)
+    color = models.CharField(max_length=30)
+    color_index = models.IntegerField()
     video = models.ForeignKey(Video,
                               on_delete=models.CASCADE,
                               related_name="segmented_objects",
                               related_query_name="segmented_object")
 
 
+class FrameSegmentation(models.Model):
+    class Meta:
+        db_table = "frame_segmentations"
+        verbose_name = "frame_segmentations"
+        verbose_name_plural = "frame_segmentation"
+
+    frame = models.ForeignKey(Frame,
+                              on_delete=models.CASCADE,
+                              related_name="frame_segmentations",
+                              related_query_name="frame_segmentation")
+    segmented_object = models.ForeignKey(
+        SegmentedObject,
+        on_delete=models.CASCADE,
+        related_name="frame_segmentations",
+        related_query_name="frame_segmentation")
+    file = models.CharField(max_length=300)
+
+
 def annotation_directory_path(instance, orig_filename):
     ext = orig_filename.split(".")[-1]
-    filename = f"{instance.frame.video.name}_{instance.frame.sequence_number}_{instance.segmented_object.id}-{instance.segmented_object.name}_{instance.user.username}.{ext}"
-    return f"{instance.frame.video.dataset}/occlusion_annotations/{instance.frame.video.name}/{filename}"
+    return "{}/occlusion_annotations/{}/{}_{}/{}_{}.{}".format(
+        instance.frame.video.dataset,
+        instance.frame.video.name,
+        instance.segmented_object.color_index,
+        instance.segmented_object.name,
+        instance.frame.sequence_number,
+        instance.user.username,
+        ext
+    )
 
 
 class OcclusionAnnotation(models.Model):
@@ -111,8 +118,43 @@ class OcclusionAnnotation(models.Model):
         default=None
     )
 
+    def save(self, *args, **kwargs):
+        try:
+            this = OcclusionAnnotation.objects.get(
+                user=self.user,
+                frame=self.frame,
+                segmented_object=self.segmented_object)
+            this.delete()
+        except: pass
+        super(OcclusionAnnotation, self).save(*args, **kwargs)
+
     def delete(self, *args, **kwargs):
-        os.remove(os.path.join(settings.MEDIA_ROOT, self.file.name))
+        path = os.path.join(settings.MEDIA_ROOT, self.file.name)
+        if os.path.exists(path):
+            os.remove(path)
         super(OcclusionAnnotation, self).delete(*args,**kwargs)
     
 
+
+class OcclusionFlag(models.Model):
+    class Meta:
+        db_table = "occlusion_flags"
+        verbose_name = "occlusion_flag"
+        verbose_name_plural = "occlusion_flags"
+    
+    frame = models.ForeignKey(Frame,
+                              on_delete=models.CASCADE,
+                              related_name="occlusion_flags",
+                              related_query_name="occlusion_flag")
+    segmented_object = models.ForeignKey(
+        SegmentedObject,
+        on_delete=models.CASCADE,
+        related_name="occlusion_flags",
+        related_query_name="occlusion_flag"
+    )
+    user = models.ForeignKey(User,
+                             on_delete=models.CASCADE,
+                             related_name="occlusion_flags",
+                             related_query_name="occlusion_flag")
+    occluded = models.PositiveSmallIntegerField()
+    # 0 = not occluded, 1 = partially occluded, 2 = occluded

@@ -11,11 +11,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.filters import OrderingFilter
 
-from .models import User, Video, OcclusionAnnotation, SegmentedObject
+from .models import (
+    User, Video, OcclusionAnnotation, SegmentedObject, OcclusionFlag
+)
 from .serializers import (
     BasicVideoSerializer, FullVideoSerializer, FrameSerializer,
     FrameSegmentationSerializer, UserSerializer, OcclusionAnnotationSerializer,
-    SegmentedObjectSerializer
+    SegmentedObjectSerializer, OcclusionFlagSerializer
 )
 
 
@@ -54,6 +56,19 @@ class SegmentedObjectDetail(generics.RetrieveUpdateAPIView):
     lookup_url_kwarg = "segmented_object_id"
 
 
+class OcclusionFlagList(generics.CreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OcclusionFlagSerializer
+    queryset = OcclusionFlag.objects.all()
+
+
+class OcclusionFlagDetail(generics.RetrieveUpdateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = OcclusionFlagSerializer
+    queryset = OcclusionFlag.objects.all()
+    lookup_url_kwarg = "occlusion_flag_id"
+
+
 class UserList(generics.ListAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = UserSerializer
@@ -82,7 +97,7 @@ class AnnotationList(generics.ListCreateAPIView):
     queryset = OcclusionAnnotation.objects.all()
 
 
-class AnnotationDetail(generics.DestroyAPIView):
+class AnnotationDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = OcclusionAnnotationSerializer
     queryset = OcclusionAnnotation.objects.all()
@@ -111,7 +126,7 @@ class Echo:
 def generate_annotation_rows():
     yield ["occlusion_annotation_id", "sequence_number",
            "occlusion_annotation_file", "frame_file", "segmentation_file",
-           "object_id", "object_name", "object_color",
+           "object_id", "object_name", "object_color", "object_color_index"
            "user_id", "username", "video_id", "video_name", "dataset"]
     annotations = OcclusionAnnotation.objects.all()
     for annotation in annotations:
@@ -124,6 +139,7 @@ def generate_annotation_rows():
             annotation.segmented_object.id,
             annotation.segmented_object.name,
             annotation.segmented_object.color,
+            annotation.segmented_object.color_index,
             annotation.user.id,
             annotation.user.username,
             annotation.frame.video.id,
