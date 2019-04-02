@@ -46,14 +46,14 @@ def load_youtube_vos_train(apps, schema_editor):
                 color=hex_color)
             segmented_object.save()
 
-            for file in os.listdir(f"{base_dir}/frame_segmentations/{video_name}/{color_index}_{obj}"):
+            for file in os.listdir(f"{base_dir}/frame_segmentations/{video_name}/{color_index}_{obj_name}"):
                 if file.endswith(".jpg") or file.endswith(".png"):
                     filename = file.split(".")[0]
                     frame = Frame.objects.get(video__name=video_name, sequence_number=int(filename))
                     seg = FrameSegmentation(
                         frame=frame,
                         segmented_object=segmented_object,
-                        file=f"YouTube-VOS-Train/frame_segmentations/{video_name}/{color_index}_{obj}/{filename}.png")
+                        file=f"YouTube-VOS-Train/frame_segmentations/{video_name}/{color_index}_{obj_name}/{filename}.png")
                     seg.save()
 
 
