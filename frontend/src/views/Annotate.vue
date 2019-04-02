@@ -9,55 +9,60 @@
             </h1>
           </div><!-- ../level-left -->
           <div class="level-right">
-            <div class="buttons has-addons">
+            <div class="level-item">
               <router-link :to="{ name: 'main', query: backQueryParams }" class="button">Video List</router-link>
+            </div><!-- ./level-item -->
+            <div class="level-item">
               <button class="button is-danger"
                 v-if="!video.skip"
                 v-shortkey="['x']"
                 @shortkey="setVideoSkipStatus(true)"
-                @click="setVideoSkipStatus(true)">Skip (x)</button>
+                @click="setVideoSkipStatus(true)">Skip [X]</button>
               <button class="button"
                 v-else
                 v-shortkey="['u']"
                 @shortkey="setVideoSkipStatus(false)"
-                @click="setVideoSkipStatus(false)">Un-skip (u)</button>
+                @click="setVideoSkipStatus(false)">Un-skip [U]</button>
+            </div><!-- ./level-item -->
+            <div class="buttons has-addons">
               <button class="button"
                 v-show="hasPrev"
                 v-shortkey="['arrowleft']"
                 @shortkey="prevVideo"
-                @click="prevVideo">Prev (&leftarrow;)</button>
+                @click="prevVideo">Prev Video (&leftarrow;)</button>
               <button class="button"
                 v-show="hasNext"
                 v-shortkey="['arrowright']"
                 @shortkey="nextVideo"
-                @click="nextVideo">Next (&rightarrow;)</button>
+                @click="nextVideo">Next Video (&rightarrow;)</button>
             </div>
           </div><!-- ./level-right -->
         </div><!-- ./level -->
-        <div class="level" style="flex-wrap: wrap;">
-          <div class="level-item" v-for="obj in video.segmented_objects" :key="obj.id">
-            <p style="margin-right:1rem;">
-              <strong>ID: {{ obj.id }} | {{ obj.name }}</strong>
-            </p>
-            <div class="color-square" :style="{ 'background-color': obj.color }"></div>
-          </div><!-- ./level-item -->
-        </div><!-- ./level -->
-        <player :user="user" :video="video" v-show="!loading"></player>
+        <div class="skipped-overlay" v-show="video.skip">
+          <h1 class="has-text-centered has-text-weight-bold is-size-3">Skipped</h1>
+        </div>
+        <guided-player :user="user" :video="video" v-show="!loading"></guided-player>
       </div><!-- ./box -->
     </div><!-- ./container -->
   </section>
 </template>
 
-<style>
-.color-square {
-  width: 25px;
-  height: 25px;
+<style scoped>
+.skipped-overlay {
+  background-color: rgba(255, 255, 255, 0.95);
+  position: absolute;
+  z-index: 999;
+  top: 5rem;
+  right: 1.25rem;
+  left: 1.25rem;
+  bottom: 1.25rem;
+  padding-top: 10rem;
 }
 </style>
 
 <script>
 import { API } from '@/api'
-import Player from '@/components/Player'
+import GuidedPlayer from '@/components/GuidedPlayer'
 
 export default {
   name: 'Annotate',
@@ -79,7 +84,7 @@ export default {
       default: () => { return {} }
     }
   },
-  components: { Player },
+  components: { GuidedPlayer },
 
   data () {
     return {
