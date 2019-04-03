@@ -25,7 +25,7 @@
                 params: { backQueryParams: backQueryParams, videoId: videoId, videos: videos, idx: idx }
                 }" class="button">Annotate</router-link>
             </div><!-- ./level-item -->
-            <div class="level-item" v-show="hasNext">
+            <div class="level-item" v-if="hasNext">
               <router-link :to="{
                 name: 'annotate',
                 params: { backQueryParams: backQueryParams, videoId: videos[idx + 1].id, videos: videos, idx: idx + 1 }
