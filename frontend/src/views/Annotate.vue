@@ -1,7 +1,10 @@
 <template>
   <section class="section">
     <div class="container is-fluid">
-      <h1 class="title">Annotate Video ({{ idx + 1 }}/{{ Math.max(videos.length, 1) }})</h1>
+      <h1 class="tags">
+         <span class="tag is-primary is-large">Annotation Mode</span>
+         <span class="tag is-light is-large">{{ idx + 1 }} of {{ Math.max(videos.length, 1) }}</span>
+      </h1>
       <div class="box">
         <div class="level">
           <div class="level-left">
@@ -36,28 +39,38 @@
               </div><!-- ./buttons -->
             </div><!-- ./level-item -->
             <div class="level-item">
-              <b-tooltip label="[X]" type="is-dark" v-if="!video.skip">
-                <button class="button is-danger"
-                  v-shortkey="['x']"
-                  @shortkey="setVideoSkipStatus(true)"
-                  @click="setVideoSkipStatus(true)">Skip</button>
-              </b-tooltip>
-              <b-tooltip label="[U]" type="is-dark" v-else>
+              <b-tooltip label="This video has no occlusions, skip"
+                         type="is-dark" v-if="!hasNoOcclusions">
                 <button class="button"
-                  v-shortkey="['u']"
-                  @shortkey="setVideoSkipStatus(false)"
-                  @click="setVideoSkipStatus(false)">Un-skip [U]</button>
+                  @click="addFlag('NO')">No occlusions</button>
+              </b-tooltip>
+              <b-tooltip label="This video has occlusions, un-skip"
+                         type="is-dark" v-else>
+                <button class="button"
+                  @click="removeFlag('NO')">Has occlusions</button>
+              </b-tooltip>
+            </div><!-- ./level-item -->
+            <div class="level-item">
+              <b-tooltip label="I'm unsure about something, skip"
+                         type="is-dark" v-if="!isUnsure">
+                <button class="button"
+                  @click="addFlag('UN')">?</button>
+              </b-tooltip>
+              <b-tooltip label="I'm no longer unsure, un-skip"
+                         type="is-dark" v-else>
+                <button class="button"
+                  @click="removeFlag('UN')">Un-skip</button>
               </b-tooltip>
             </div><!-- ./level-item -->
             <div class="level-item">
               <router-link :to="{
                 name: 'review',
                 params: { backQueryParams: backQueryParams, videoId: videoId, videos: videos, idx: idx }
-                }" class="button is-success">Review</router-link>
+                }" class="button is-warning">Review</router-link>
             </div><!-- ./level-item -->
           </div><!-- ./level-right -->
         </div><!-- ./level -->
-        <div class="skipped-overlay" v-show="video.skip">
+        <div class="skipped-overlay" v-show="hasNoOcclusions || isUnsure">
           <h1 class="has-text-centered has-text-weight-bold is-size-3">Skipped</h1>
         </div>
         <guided-player :user="user" :video="video" v-show="!loading"
@@ -112,6 +125,7 @@ export default {
         id: -1,
         dataset: '',
         frames: [],
+        video_flags: [],
         segmented_objects: []
       },
       loading: false
@@ -126,7 +140,13 @@ export default {
 
   computed: {
     hasNext () { return this.idx < this.videos.length - 1 },
-    hasPrev () { return this.idx > 0 }
+    hasPrev () { return this.idx > 0 },
+    hasNoOcclusions () {
+      return Boolean(this.video.video_flags.find(f => f.flag === 'NO'))
+    },
+    isUnsure () {
+      return Boolean(this.video.video_flags.find(f => f.flag === 'UN'))
+    }
   },
 
   methods: {
@@ -169,12 +189,23 @@ export default {
       }
     },
 
-    setVideoSkipStatus (status) {
-      API.patch(`videos/${this.videoId}`, { skip: status })
+    addFlag (flag) {
+      API.post(`video_flags/`, { video_id: this.videoId, flag: flag })
         .then(response => {
-          this.video.skip = status
+          this.video.video_flags.push(response.data)
         })
         .catch(e => console.log(e))
+    },
+
+    removeFlag (flagType) {
+      let flag = this.video.video_flags.find(f => f.flag === flagType)
+      if (flag) {
+        API.delete(`video_flags/${flag.id}`)
+          .then(response => {
+            this.video.video_flags = this.video.video_flags.filter(f => f.id !== flag.id)
+          })
+          .catch(e => console.log(e))
+      }
     },
 
     review () {

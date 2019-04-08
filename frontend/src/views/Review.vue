@@ -1,8 +1,9 @@
 <template>
   <section class="section">
     <div class="container is-fluid">
-      <h1 class="title">
-        Review | Video ({{ idx + 1 }}/{{ Math.max(videos.length, 1) }})
+      <h1 class="tags">
+         <span class="tag is-warning is-large">Review Mode</span>
+         <span class="tag is-light is-large">{{ idx + 1 }} of {{ Math.max(videos.length, 1) }}</span>
       </h1>
       <div class="box">
         <div class="level">
@@ -23,7 +24,7 @@
               <router-link :to="{
                 name: 'annotate',
                 params: { backQueryParams: backQueryParams, videoId: videoId, videos: videos, idx: idx }
-                }" class="button">Annotate</router-link>
+                }" class="button">Annotate Current</router-link>
             </div><!-- ./level-item -->
             <div class="level-item" v-if="hasNext">
               <router-link :to="{

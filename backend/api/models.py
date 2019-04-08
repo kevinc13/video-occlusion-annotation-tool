@@ -21,7 +21,31 @@ class Video(models.Model):
 
     name = models.CharField(max_length=100)
     dataset = models.CharField(max_length=100)
-    skip = models.BooleanField(default=False)
+    
+
+class VideoFlag(models.Model):
+    class Meta:
+        db_table = "video_flags"
+        verbose_name = "video_flag"
+        verbose_name_plural = "video_flags"
+
+    video = models.ForeignKey(Video,
+                              related_name="video_flags",
+                              related_query_name="video_flag",
+                              on_delete=models.CASCADE)
+    user = models.ForeignKey(User,
+                             related_name="video_flags",
+                             related_query_name="video_flags",
+                             on_delete=models.CASCADE)
+    FLAG_CHOICES = (
+        ('NO', 'No occlusions in video'),
+        ('UN', 'Unsure')
+    )
+
+    flag = models.CharField(
+        max_length=2,
+        choices=FLAG_CHOICES
+    )
 
 
 class Frame(models.Model):
@@ -136,25 +160,25 @@ class OcclusionAnnotation(models.Model):
     
 
 
-class OcclusionFlag(models.Model):
-    class Meta:
-        db_table = "occlusion_flags"
-        verbose_name = "occlusion_flag"
-        verbose_name_plural = "occlusion_flags"
+# class OcclusionFlag(models.Model):
+#     class Meta:
+#         db_table = "occlusion_flags"
+#         verbose_name = "occlusion_flag"
+#         verbose_name_plural = "occlusion_flags"
     
-    frame = models.ForeignKey(Frame,
-                              on_delete=models.CASCADE,
-                              related_name="occlusion_flags",
-                              related_query_name="occlusion_flag")
-    segmented_object = models.ForeignKey(
-        SegmentedObject,
-        on_delete=models.CASCADE,
-        related_name="occlusion_flags",
-        related_query_name="occlusion_flag"
-    )
-    user = models.ForeignKey(User,
-                             on_delete=models.CASCADE,
-                             related_name="occlusion_flags",
-                             related_query_name="occlusion_flag")
-    occluded = models.PositiveSmallIntegerField()
+#     frame = models.ForeignKey(Frame,
+#                               on_delete=models.CASCADE,
+#                               related_name="occlusion_flags",
+#                               related_query_name="occlusion_flag")
+#     segmented_object = models.ForeignKey(
+#         SegmentedObject,
+#         on_delete=models.CASCADE,
+#         related_name="occlusion_flags",
+#         related_query_name="occlusion_flag"
+#     )
+#     user = models.ForeignKey(User,
+#                              on_delete=models.CASCADE,
+#                              related_name="occlusion_flags",
+#                              related_query_name="occlusion_flag")
+#     occluded = models.PositiveSmallIntegerField()
     # 0 = not occluded, 1 = partially occluded, 2 = occluded

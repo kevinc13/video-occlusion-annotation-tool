@@ -45,19 +45,15 @@
             <div class="level-item has-addons">
               <b-tooltip label="[Shift + Space]" position="is-bottom" type="is-dark">
                 <button class="button is-light"
-                        v-shortkey="['shift', 'space']"
-                        @shortkey="prev()"
                         @click="prev()"
-                        v-show="hasPrevFrame || hasPrevObject">
+                        :disabled="!hasPrevFrame && !hasPrevObject">
                   Prev
                 </button>
               </b-tooltip>
               <b-tooltip label="[Space]" position="is-bottom" type="is-dark">
                 <button class="button is-light"
-                    v-shortkey="['space']"
-                    @shortkey="next()"
                     @click="next()"
-                    v-show="hasNextFrame || hasNextObject">
+                    :disabled="!hasNextFrame && !hasNextObject">
                   Next
                 </button>
               </b-tooltip>
@@ -65,33 +61,28 @@
           </div><!-- ./level-left -->
           <div class="level-right">
             <button class="button is-light"
-                v-shortkey.once="['t']"
-                @shortkey="toggleSegmentations"
-                @click="toggleSegmentations">Toggle Segmentations [T]</button>
+                @click="toggleSegmentations">Toggle Segmentations</button>
           </div><!-- ./level-right -->
         </div><!-- ./level -->
       </div><!-- ./column -->
 
       <div class="column">
         <header class="subtitle">Frame Annotation</header>
-        <label class="label">Occluded?</label>
+        <!-- <label class="label">Occluded?</label>
         <div class="field has-addons">
           <b-radio-button v-model="currentOcclusionFlag" :native-value="0">No</b-radio-button>
           <b-radio-button v-model="currentOcclusionFlag" :native-value="1">Partially</b-radio-button>
           <b-radio-button v-model="currentOcclusionFlag" :native-value="2">Fully</b-radio-button>
-        </div><!-- ./field -->
-        <div v-show="currentOcclusionFlag > 0">
-          <div class="field">
-            <label class="label">Brush Size</label>
-            <input type="range" min="1" max="100" v-model="brushSize">
-          </div>
-          <button class="button is-light" v-shortkey.once="['c']"
-              @shortkey="clearAnnotationCanvas"
-              @click="clearAnnotationCanvas" v-if="!currentUserAnnotation">Clear [C]</button>
-          <button class="button is-danger"
-              @click="removeAnnotation"
-              v-else>Remove Annotation</button>
+        </div> -->
+        <div class="field">
+          <label class="label">Brush Size</label>
+          <input type="range" min="1" max="100" v-model="brushSize">
         </div>
+        <button class="button is-light"
+            @click="clearAnnotationCanvas" v-if="!currentUserAnnotation">Clear [C]</button>
+        <button class="button is-danger"
+            @click="removeAnnotation"
+            v-else>Remove Annotation</button>
       </div><!-- ./column -->
     </div><!-- ./columns -->
   </div><!-- ./guided-player -->
@@ -146,6 +137,7 @@ export default {
       animationFrameRequest: null, // window animation frame request
 
       brushSize: 20, // brush size of annotation
+      isAnnotating: true,
       isPainting: false,
       hasPainted: false,
       position: {
@@ -185,24 +177,24 @@ export default {
         return null
       }
     },
-    currentOcclusionFlag: {
-      get () {
-        if (this.currentFrame) {
-          let flags = this.currentFrame.user_occlusion_flags.filter(f => f.segmented_object_id === this.selectedObject.id)
-          if (flags.length > 0) return flags[0].occluded
-        }
-        return -1
-      },
-      set (newValue) {
-        let flag = this.currentFrame.user_occlusion_flags.filter(f => f.segmented_object_id === this.selectedObject.id)
-        if (flag.length >= 1) {
-          this.updateOcclusionFlag(flag[0].id, newValue)
-        } else {
-          this.addOcclusionFlag(newValue)
-        }
-      }
-    },
-    isAnnotating () { return this.currentOcclusionFlag > 0 },
+    // currentOcclusionFlag: {
+    //   get () {
+    //     if (this.currentFrame) {
+    //       let flags = this.currentFrame.user_occlusion_flags.filter(f => f.segmented_object_id === this.selectedObject.id)
+    //       if (flags.length > 0) return flags[0].occluded
+    //     }
+    //     return -1
+    //   },
+    //   set (newValue) {
+    //     let flag = this.currentFrame.user_occlusion_flags.filter(f => f.segmented_object_id === this.selectedObject.id)
+    //     if (flag.length >= 1) {
+    //       this.updateOcclusionFlag(flag[0].id, newValue)
+    //     } else {
+    //       this.addOcclusionFlag(newValue)
+    //     }
+    //   }
+    // },
+    // isAnnotating () { return this.currentOcclusionFlag > 0 },
     ready () {
       return {
         userReady: !_.isEmpty(this.user),
@@ -217,12 +209,12 @@ export default {
         this.frames = this.video.frames.slice().sort((a, b) => {
           return a.sequence_number - b.sequence_number
         })
-        if (this.frames.length > 0) this.reset()
+        if (this.frames.length > 0) this.drawFrame()
       }
     },
     selectedObject () {
       this.clearAnnotationCanvas()
-      this.reset()
+      if (this.frames.length > 0) this.drawFrame()
     },
     '$route': function () {
       this.currentFrameIdx = 0
@@ -232,27 +224,27 @@ export default {
 
   methods: {
     /* Annotation mode methods  */
-    addOcclusionFlag (status) {
-      API.post(`occlusion_flags/`, {
-        frame: this.currentFrame.id,
-        segmented_object_id: this.selectedObject.id,
-        occluded: status
-      }).then(response => {
-        let flag = response.data
-        this.currentFrame.user_occlusion_flags.push({
-          id: flag.id,
-          occluded: flag.occluded,
-          segmented_object_id: flag.segmented_object_id
-        })
-      })
-    },
-    updateOcclusionFlag (flagId, status) {
-      API.patch(`occlusion_flags/${flagId}`, { occluded: status })
-        .then(response => {
-          let flag = this.currentFrame.user_occlusion_flags.find(f => f.id === flagId)
-          flag.occluded = status
-        })
-    },
+    // addOcclusionFlag (status) {
+    //   API.post(`occlusion_flags/`, {
+    //     frame: this.currentFrame.id,
+    //     segmented_object_id: this.selectedObject.id,
+    //     occluded: status
+    //   }).then(response => {
+    //     let flag = response.data
+    //     this.currentFrame.user_occlusion_flags.push({
+    //       id: flag.id,
+    //       occluded: flag.occluded,
+    //       segmented_object_id: flag.segmented_object_id
+    //     })
+    //   })
+    // },
+    // updateOcclusionFlag (flagId, status) {
+    //   API.patch(`occlusion_flags/${flagId}`, { occluded: status })
+    //     .then(response => {
+    //       let flag = this.currentFrame.user_occlusion_flags.find(f => f.id === flagId)
+    //       flag.occluded = status
+    //     })
+    // },
     saveAnnotation () {
       console.log('Saving annotation for frame ' + this.currentFrame.sequence_number)
       this.clear(this.outputCanvasContext)
@@ -349,12 +341,8 @@ export default {
       if (this.frames.length > 0) this.drawFrame()
     },
 
-    nextObject () {
-      this.selectedObjectIdx++
-    },
-    prevObject () {
-      this.selectedObjectIdx--
-    },
+    nextObject () { this.selectedObjectIdx++ },
+    prevObject () { this.selectedObjectIdx-- },
 
     next () {
       if (this.isAnnotating && this.hasPainted) {
@@ -369,6 +357,7 @@ export default {
       if (this.hasNextFrame) {
         this.nextFrame()
       } else if (this.hasNextObject) {
+        this.currentFrameIdx = 0
         this.nextObject()
       } else {
         this.$emit('reachedAnnotationEnd')
@@ -378,6 +367,7 @@ export default {
       if (this.hasPrevFrame) {
         this.prevFrame()
       } else if (this.hasPrevObject) {
+        this.currentFrameIdx = this.frames.length - (this.frames.length % this.stepSize)
         this.prevObject()
       }
     },
@@ -435,6 +425,16 @@ export default {
           )
         }
       }
+    },
+
+    handleKeyEvents (e) {
+      if (e.shiftKey && e.key === ' ') {
+        e.preventDefault()
+        this.prev()
+      } else if (!e.shiftKey && e.key === ' ') {
+        e.preventDefault()
+        this.next()
+      }
     }
   },
 
@@ -450,8 +450,16 @@ export default {
     // this.initializeRequestAnimationFrame()
     // Setup correct canvas dimensions
     this.updateCanvasDimensions()
-    // Anytime the window size changes, we'll have to update the canvas dimensions
+  },
+
+  activated () {
     window.addEventListener('resize', this.updateCanvasDimensions)
+    window.addEventListener('keydown', this.handleKeyEvents)
+  },
+
+  deactivated () {
+    window.removeEventListener('resize', this.updateCanvasDimensions)
+    window.removeEventListener('keydown', this.handleKeyEvents)
   }
 }
 </script>

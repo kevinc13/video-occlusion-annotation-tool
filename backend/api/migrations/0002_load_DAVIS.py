@@ -12,9 +12,9 @@ def load_davis(apps, schema_editor):
     Frame = apps.get_model("api", "Frame")
     FrameSegmentation = apps.get_model("api", "FrameSegmentation")
     SegmentedObject = apps.get_model("api", "SegmentedObject")
-    OcclusionFlag = apps.get_model("api", "OcclusionFlag")
+    # OcclusionFlag = apps.get_model("api", "OcclusionFlag")
 
-    skipped_videos = ["hike","mallard-fly","upside-down","mallard-water","dance-twirl","stroller","dog","bear","rollerblade","camel","drift-chicane","parkour","goat","breakdance","car-roundabout","drift-turn","breakdance-flare","drift-straight","paragliding","rallye","flamingo","car-turn","lab-coat","car-shadow","blackswan","elephant"]
+    # no_occlusion_videos = ["hike","mallard-fly","upside-down","mallard-water","dance-twirl","stroller","dog","bear","rollerblade","camel","drift-chicane","parkour","goat","breakdance","car-roundabout","drift-turn","breakdance-flare","drift-straight","paragliding","rallye","flamingo","car-turn","lab-coat","car-shadow","blackswan","elephant"]
 
     # Read semantics file
     with open(f"{base_dir}/objects.json") as f:
@@ -29,8 +29,6 @@ def load_davis(apps, schema_editor):
         f"{base_dir}/frames") if d.is_dir()]
     for video_name in video_names:
         video = Video(name=video_name, dataset="DAVIS")
-        if video_name in skipped_videos:
-            video.skip = True
         video.save()
 
         for file in os.listdir(f"{base_dir}/frames/{video_name}"):

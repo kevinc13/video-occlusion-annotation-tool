@@ -15,7 +15,7 @@
       </div><!-- ./buttons -->
     </div><!-- ./level -->
     <div class="columns">
-      <div class="column is-three-quarters">
+      <div class="column">
         <!-- Output canvas, used for resizing (hidden) -->
         <div ref="canvasWrapper">
           <div class="canvas-layers" :style="{ 'width': width + 'px', 'height': height + 'px' }">
@@ -58,11 +58,6 @@
                 @click="toggleSegmentations">Toggle Segmentations</button>
           </div><!-- ./level-right -->
         </div><!-- ./level -->
-      </div><!-- ./column -->
-
-      <div class="column">
-        <header class="subtitle">Frame Annotation</header>
-        <label class="label">Occluded: {{ currentOcclusionFlag }}</label>
       </div><!-- ./column -->
     </div><!-- ./columns -->
   </div><!-- ./guided-player -->
@@ -137,20 +132,20 @@ export default {
       })
       return (annotation.length > 0) ? annotation[0] : null
     },
-    currentOcclusionFlag: {
-      get () {
-        if (this.currentFrame) {
-          let flags = this.currentFrame.user_occlusion_flags.filter(f => f.segmented_object_id === this.selectedObject.id)
-          if (flags.length > 0) {
-            let flag = flags[0].occluded
-            if (flag === 0) return 'No'
-            if (flag === 1) return 'Partially'
-            if (flag === 2) return 'Fully'
-          }
-        }
-        return 'Not specified'
-      }
-    },
+    // currentOcclusionFlag: {
+    //   get () {
+    //     if (this.currentFrame) {
+    //       let flags = this.currentFrame.user_occlusion_flags.filter(f => f.segmented_object_id === this.selectedObject.id)
+    //       if (flags.length > 0) {
+    //         let flag = flags[0].occluded
+    //         if (flag === 0) return 'No'
+    //         if (flag === 1) return 'Partially'
+    //         if (flag === 2) return 'Fully'
+    //       }
+    //     }
+    //     return 'Not specified'
+    //   }
+    // },
     ready () {
       return {
         userReady: !_.isEmpty(this.user),
@@ -269,6 +264,16 @@ export default {
           )
         }
       }
+    },
+
+    handleKeyEvents (e) {
+      if (e.shiftKey && e.key === ' ') {
+        e.preventDefault()
+        this.prev()
+      } else if (!e.shiftKey && e.key === ' ') {
+        e.preventDefault()
+        this.next()
+      }
     }
   },
 
@@ -283,8 +288,16 @@ export default {
     // this.initializeRequestAnimationFrame()
     // Setup correct canvas dimensions
     this.updateCanvasDimensions()
-    // Anytime the window size changes, we'll have to update the canvas dimensions
+  },
+
+  activated () {
     window.addEventListener('resize', this.updateCanvasDimensions)
+    window.addEventListener('keydown', this.handleKeyEvents)
+  },
+
+  deactivated () {
+    window.removeEventListener('resize', this.updateCanvasDimensions)
+    window.removeEventListener('keydown', this.handleKeyEvents)
   }
 }
 </script>

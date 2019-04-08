@@ -1,8 +1,8 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from api.models import (
-    User, Video, Frame, FrameSegmentation, OcclusionAnnotation,
-    SegmentedObject, OcclusionFlag
+    User, Video, VideoFlag, Frame, FrameSegmentation, SegmentedObject,
+    OcclusionAnnotation
 )
 from .fields import Base64ImageField
 
@@ -67,41 +67,71 @@ class BasicOcclusionAnnotationSerializer(serializers.ModelSerializer):
         return f"/media/{obj.file}"
 
 
-class OcclusionFlagSerializer(serializers.ModelSerializer):
+# class OcclusionFlagSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = OcclusionFlag
+#         fields = ("id", "frame", "segmented_object_id", "user", "occluded")
+    
+#     user = UserSerializer(default=serializers.CurrentUserDefault())
+#     segmented_object_id = serializers.PrimaryKeyRelatedField(
+#         queryset=SegmentedObject.objects.all(),
+#         required=False)
+
+#     def create(self, validated_data):
+#         if "segmented_object_id" in validated_data:
+#             segmented_object_id = validated_data.pop("segmented_object_id")
+#             validated_data["segmented_object"] = segmented_object_id
+#         return self.Meta.model.objects.create(**validated_data)
+
+
+# class BasicOcclusionFlagSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = OcclusionFlag
+#         fields = ("id", "segmented_object_id", "occluded")
+
+class FullVideoFlagSerializer(serializers.ModelSerializer):
     class Meta:
-        model = OcclusionFlag
-        fields = ("id", "frame", "segmented_object_id", "user", "occluded")
+        model = VideoFlag
+        fields = ("id", "video_id", "user", "flag")
     
     user = UserSerializer(default=serializers.CurrentUserDefault())
-    segmented_object_id = serializers.PrimaryKeyRelatedField(
-        queryset=SegmentedObject.objects.all(),
-        required=False)
+    video_id = serializers.PrimaryKeyRelatedField(
+        queryset=Video.objects.all())
 
     def create(self, validated_data):
-        if "segmented_object_id" in validated_data:
-            segmented_object_id = validated_data.pop("segmented_object_id")
-            validated_data["segmented_object"] = segmented_object_id
+        if "video_id" in validated_data:
+            video_id = validated_data.pop("video_id")
+            validated_data["video"] = video_id
         return self.Meta.model.objects.create(**validated_data)
 
 
-class BasicOcclusionFlagSerializer(serializers.ModelSerializer):
+class BasicVideoFlagSerializer(serializers.ModelSerializer):
     class Meta:
-        model = OcclusionFlag
-        fields = ("id", "segmented_object_id", "occluded")
+        model = VideoFlag
+        fields = ("id", "flag")
 
 
 class BasicVideoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Video
         fields = (
-            "id", "name", "dataset", "skip",
+            "id", "name", "dataset", "video_flags",
             "n_annotations", "n_user_annotations",
             "n_objects"
         )
     
+    video_flags = serializers.SerializerMethodField()
+
     n_annotations = serializers.SerializerMethodField()
     n_user_annotations = serializers.SerializerMethodField()
     n_objects = serializers.SerializerMethodField()
+
+    def get_video_flags(self, obj):
+        flags = VideoFlag.objects.filter(
+            user=self.context['request'].user, video=obj.id)
+        serializer = BasicVideoFlagSerializer(
+            instance=flags, many=True, read_only=True)
+        return serializer.data
 
     def get_n_annotations(self, obj):
         return OcclusionAnnotation.objects.filter(
@@ -132,13 +162,13 @@ class FrameSerializer(serializers.ModelSerializer):
         model = Frame
         fields = (
             "id", "path", "sequence_number", "frame_segmentations",
-            "user_occlusion_annotations", "user_occlusion_flags"
+            "user_occlusion_annotations"
         )
 
     path = serializers.SerializerMethodField()
     frame_segmentations = FrameSegmentationSerializer(read_only=True, many=True)
     user_occlusion_annotations = serializers.SerializerMethodField()
-    user_occlusion_flags = serializers.SerializerMethodField()
+    # user_occlusion_flags = serializers.SerializerMethodField()
 
     def get_path(self, obj):
         return f"/media/{obj.file}"
@@ -149,18 +179,21 @@ class FrameSerializer(serializers.ModelSerializer):
         serializer = BasicOcclusionAnnotationSerializer(queryset, many=True)
         return serializer.data
     
-    def get_user_occlusion_flags(self, obj):
-        queryset = OcclusionFlag.objects.filter(
-            frame=obj, user=self.context["request"].user)
-        serializer = BasicOcclusionFlagSerializer(queryset, many=True)
-        return serializer.data
-
+    # def get_user_occlusion_flags(self, obj):
+    #     queryset = OcclusionFlag.objects.filter(
+    #         frame=obj, user=self.context["request"].user)
+    #     serializer = BasicOcclusionFlagSerializer(queryset, many=True)
+    #     return serializer.data
 
 
 class FullVideoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Video
-        fields = ("id", "name", "dataset", "skip", "frames", "segmented_objects")
+        fields = (
+            "id", "name", "dataset","frames", "segmented_objects",
+            "video_flags"
+        )
     
     segmented_objects = SegmentedObjectSerializer(many=True, read_only=True)
+    video_flags = BasicVideoFlagSerializer(many=True, read_only=True)
     frames = FrameSerializer(many=True, read_only=True)

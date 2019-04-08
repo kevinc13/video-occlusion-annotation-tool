@@ -77,7 +77,7 @@
           :per-page="pagination.limit"
           @page-change="onPageChange"
 
-          :row-class="(row, index) => row.skip && 'is-skipped'"
+          :row-class="(row, index) => row.video_flags.length > 0 && 'is-skipped'"
 
           backend-sorting
           default-sort-direction="asc"
@@ -110,7 +110,7 @@
               <router-link :to="{
                 name: 'review',
                 params: { backQueryParams: requestParams, videoId: props.row.id}
-                }" class="button is-small">Review</router-link>
+                }" class="button is-warning is-small">Review</router-link>
             </b-table-column>
           </template>
         </b-table>
@@ -172,7 +172,7 @@ export default {
   methods: {
     startAnnotating () {
       let batch = this.videos.slice(this.startIdx)
-      if (!this.includeSkipped) batch = batch.filter(v => !v.skip)
+      if (!this.includeSkipped) batch = batch.filter(v => v.video_flags.length === 0)
       this.$router.push({
         name: 'annotate',
         params: {
@@ -232,7 +232,9 @@ export default {
     if ('page' in this.$route.query) this.requestParams.page = Number(this.$route.query.page)
     if ('limit' in this.$route.query) this.requestParams.limit = Number(this.$route.query.limit)
     if ('search' in this.$route.query) this.requestParams.search = this.$route.query.search
+  },
 
+  activated () {
     this.getVideos()
     this.getSummary()
   }

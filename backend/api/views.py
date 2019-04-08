@@ -12,12 +12,12 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.filters import OrderingFilter, SearchFilter
 
 from .models import (
-    User, Video, OcclusionAnnotation, SegmentedObject, OcclusionFlag
+    User, Video, OcclusionAnnotation, SegmentedObject, VideoFlag
 )
 from .serializers import (
     BasicVideoSerializer, FullVideoSerializer, FrameSerializer,
     FrameSegmentationSerializer, UserSerializer, OcclusionAnnotationSerializer,
-    SegmentedObjectSerializer, OcclusionFlagSerializer
+    SegmentedObjectSerializer, FullVideoFlagSerializer
 )
 
 
@@ -50,6 +50,19 @@ class VideoDetail(generics.RetrieveUpdateAPIView):
     lookup_url_kwarg = "video_id"
 
 
+class VideoFlagList(generics.ListCreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = FullVideoFlagSerializer
+    queryset = VideoFlag.objects.all()
+
+
+class VideoFlagDetail(generics.RetrieveDestroyAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = FullVideoFlagSerializer
+    queryset = VideoFlag.objects.all()
+    lookup_url_kwarg = "video_flag_id"
+
+
 class SegmentedObjectDetail(generics.RetrieveUpdateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = SegmentedObjectSerializer
@@ -57,17 +70,17 @@ class SegmentedObjectDetail(generics.RetrieveUpdateAPIView):
     lookup_url_kwarg = "segmented_object_id"
 
 
-class OcclusionFlagList(generics.CreateAPIView):
-    permission_classes = (IsAuthenticated,)
-    serializer_class = OcclusionFlagSerializer
-    queryset = OcclusionFlag.objects.all()
+# class OcclusionFlagList(generics.CreateAPIView):
+#     permission_classes = (IsAuthenticated,)
+#     serializer_class = OcclusionFlagSerializer
+#     queryset = OcclusionFlag.objects.all()
 
 
-class OcclusionFlagDetail(generics.RetrieveUpdateAPIView):
-    permission_classes = (IsAuthenticated,)
-    serializer_class = OcclusionFlagSerializer
-    queryset = OcclusionFlag.objects.all()
-    lookup_url_kwarg = "occlusion_flag_id"
+# class OcclusionFlagDetail(generics.RetrieveUpdateAPIView):
+#     permission_classes = (IsAuthenticated,)
+#     serializer_class = OcclusionFlagSerializer
+#     queryset = OcclusionFlag.objects.all()
+#     lookup_url_kwarg = "occlusion_flag_id"
 
 
 class UserList(generics.ListAPIView):
