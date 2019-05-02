@@ -15,7 +15,7 @@
       </div><!-- ./buttons -->
     </div><!-- ./level -->
     <div class="columns">
-      <div class="column">
+      <div class="column is-three-quarters">
         <!-- Output canvas, used for resizing (hidden) -->
         <div ref="canvasWrapper">
           <div class="canvas-layers" :style="{ 'width': width + 'px', 'height': height + 'px' }">
@@ -43,12 +43,12 @@
             <div class="level-item has-addons">
               <button class="button is-light"
                       @click="prev()"
-                      v-show="hasPrevFrame || hasPrevObject">
+                      :disabled="!hasPrevFrame && !hasPrevObject">
                 Prev
               </button>
               <button class="button is-light"
                       @click="next()"
-                      v-show="hasNextFrame || hasNextObject">
+                      :disabled="!hasNextFrame && !hasNextObject">
                 Next
               </button>
             </div>
@@ -71,6 +71,8 @@
 .canvas-layers {
   position: relative;
   margin-bottom: 0.5rem;
+  border: 10px solid #ffc107;
+  box-sizing: content-box;
 }
 .canvas-layers canvas {
   position: absolute;
