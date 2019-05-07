@@ -12,7 +12,8 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.filters import OrderingFilter, SearchFilter
 
 from .models import (
-    User, Video, OcclusionAnnotation, SegmentedObject, VideoFlag
+    User, Video, OcclusionAnnotation, SegmentedObject, VideoFlag,
+    FrameSegmentation
 )
 from .serializers import (
     BasicVideoSerializer, FullVideoSerializer, FrameSerializer,
@@ -139,17 +140,19 @@ class Echo:
 
 def generate_annotation_rows():
     yield ["occlusion_annotation_id", "sequence_number",
-           "occlusion_annotation_file", "frame_file", "segmentation_file",
-           "object_id", "object_name", "object_color", "object_color_index"
+           "occlusion_annotation_file", "frame_file", "frame_segmentation_file",
+           "object_id", "object_name", "object_color", "object_color_index",
            "user_id", "username", "video_id", "video_name", "dataset"]
     annotations = OcclusionAnnotation.objects.all()
     for annotation in annotations:
+        frame_segmentation = FrameSegmentation.objects.get(
+            frame=annotation.frame, segmented_object=annotation.segmented_object)
         yield [
             annotation.id,
             annotation.frame.sequence_number,
             "/".join(annotation.file.name.split("/")[1:]),
             "/".join(annotation.frame.file.split("/")[1:]),
-            "/".join(annotation.frame.frame_segmentation.file.split("/")[1:]),
+            "/".join(frame_segmentation.file.split("/")[1:]),
             annotation.segmented_object.id,
             annotation.segmented_object.name,
             annotation.segmented_object.color,
