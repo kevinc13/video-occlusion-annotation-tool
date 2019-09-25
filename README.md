@@ -14,5 +14,15 @@ To install the dependencies for the frontend, run the following within the ```fr
 npm install
 ```
 
+## Development
+During development, open two terminal sessions and start the Webpack dev server (on port 8080) in one session and run the Django dev server (on port 8000) in the other.
+
+```
+$ npm run serve
+```
+```
+$ python manage.py runserver
+```
+
 ## Build
 Run ```make build``` to build the project for deployment.
