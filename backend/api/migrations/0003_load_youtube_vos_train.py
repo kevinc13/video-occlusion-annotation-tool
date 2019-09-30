@@ -5,15 +5,14 @@ import os, json
 
 
 def load_youtube_vos_train(apps, schema_editor):
-    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
-        os.path.dirname(os.path.abspath(__file__)))))) + "/media/YouTube-VOS-Train"
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))))) + "/media/YouTube-VOS-Train"
 
     Video = apps.get_model("api", "Video")
     Frame = apps.get_model("api", "Frame")
     FrameSegmentation = apps.get_model("api", "FrameSegmentation")
     SegmentedObject = apps.get_model("api", "SegmentedObject")
-    # OcclusionFlag = apps.get_model("api", "OcclusionFlag")
-    
+
     # Read meta.json
     with open(f"{base_dir}/meta.json") as f:
         meta = json.load(f)

@@ -4,7 +4,6 @@ venv/
 # Django files we want to ignore
 *.log
 .static_storage/
-.media/
 __pycache__/
 *.py[cod]
 *$py.class

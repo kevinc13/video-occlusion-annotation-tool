@@ -5,8 +5,8 @@ import os, json
 
 
 def load_davis(apps, schema_editor):
-    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
-        os.path.dirname(os.path.abspath(__file__)))))) + "/media/DAVIS"
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))))) + "/media/DAVIS"
 
     Video = apps.get_model("api", "Video")
     Frame = apps.get_model("api", "Frame")

@@ -4,14 +4,16 @@ import cv2
 import json
 import numpy as np
 
-root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/media/DAVIS"
+
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/media/YouTube-VOS-Train"
 
 def main():
     all_segs_folder = os.path.join(root_dir, "frame_segmentations")
     video_list = os.listdir(all_segs_folder)
     object_data = {}
-    with open(os.path.join(root_dir, "objects.json")) as f:
+    with open(os.path.join(root_dir, "meta.json")) as f:
         object_data = json.load(f)
+    object_data = object_data["videos"]
 
     for video_name in video_list:
         if video_name not in object_data: continue
@@ -19,8 +21,8 @@ def main():
         seg_folder = os.path.join(all_segs_folder, video_name)
         print("Separating out frame segmentations for " + video_name)
 
-        for obj_color_index, obj_name in object_data[video_name].items():
-            obj_seg_dir = os.path.join(seg_folder, "{}_{}".format(obj_color_index, obj_name))
+        for obj_color_index, obj in object_data[video_name]["objects"].items():
+            obj_seg_dir = os.path.join(seg_folder, "{}_{}".format(obj_color_index, obj["category"]))
             if not os.path.exists(obj_seg_dir):
                 os.mkdir(obj_seg_dir)
 
@@ -33,7 +35,8 @@ def main():
             if palette is None:
                 palette = full_seg.getpalette()
 
-            for obj_color_index, obj_name in object_data[video_name].items():
+            for obj_color_index, obj in object_data[video_name]["objects"].items():
+                obj_name = obj["category"]
                 obj_seg_file = os.path.join(
                     seg_folder,
                     "{}_{}".format(obj_color_index, obj_name),
