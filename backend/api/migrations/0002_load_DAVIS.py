@@ -12,9 +12,6 @@ def load_davis(apps, schema_editor):
     Frame = apps.get_model("api", "Frame")
     FrameSegmentation = apps.get_model("api", "FrameSegmentation")
     SegmentedObject = apps.get_model("api", "SegmentedObject")
-    # OcclusionFlag = apps.get_model("api", "OcclusionFlag")
-
-    # no_occlusion_videos = ["hike","mallard-fly","upside-down","mallard-water","dance-twirl","stroller","dog","bear","rollerblade","camel","drift-chicane","parkour","goat","breakdance","car-roundabout","drift-turn","breakdance-flare","drift-straight","paragliding","rallye","flamingo","car-turn","lab-coat","car-shadow","blackswan","elephant"]
 
     # Read semantics file
     with open(f"{base_dir}/objects.json") as f:
@@ -24,7 +21,7 @@ def load_davis(apps, schema_editor):
     with open(f"{base_dir}/palette.txt") as f:
         for line in f:
             palette.append([int(n) for n in line.split(" ")])
-    
+
     video_names = [d.name for d in os.scandir(
         f"{base_dir}/frames") if d.is_dir()]
     for video_name in video_names:

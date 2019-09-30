@@ -21,7 +21,7 @@ class Video(models.Model):
 
     name = models.CharField(max_length=100)
     dataset = models.CharField(max_length=100)
-    
+
 
 class VideoFlag(models.Model):
     class Meta:
@@ -68,14 +68,6 @@ class SegmentedObject(models.Model):
         verbose_name = "segmented_object"
         verbose_name_plural = "segmented_objects"
 
-    # category = models.ForeignKey(SegmentedObjectCategory,
-    #                              on_delete=models.CASCADE,
-    #                              related_name="segmented_objects",
-    #                              related_query_name="segmented_object")
-    # frame_segmentation = models.ForeignKey(FrameSegmentation,
-    #                                        on_delete=models.CASCADE,
-    #                                        related_name="segmented_objects",
-    #                                        related_query_name="segmented_object")
     name = models.CharField(max_length=30)
     color = models.CharField(max_length=30)
     color_index = models.IntegerField()
@@ -157,28 +149,4 @@ class OcclusionAnnotation(models.Model):
         if os.path.exists(path):
             os.remove(path)
         super(OcclusionAnnotation, self).delete(*args,**kwargs)
-    
 
-
-# class OcclusionFlag(models.Model):
-#     class Meta:
-#         db_table = "occlusion_flags"
-#         verbose_name = "occlusion_flag"
-#         verbose_name_plural = "occlusion_flags"
-    
-#     frame = models.ForeignKey(Frame,
-#                               on_delete=models.CASCADE,
-#                               related_name="occlusion_flags",
-#                               related_query_name="occlusion_flag")
-#     segmented_object = models.ForeignKey(
-#         SegmentedObject,
-#         on_delete=models.CASCADE,
-#         related_name="occlusion_flags",
-#         related_query_name="occlusion_flag"
-#     )
-#     user = models.ForeignKey(User,
-#                              on_delete=models.CASCADE,
-#                              related_name="occlusion_flags",
-#                              related_query_name="occlusion_flag")
-#     occluded = models.PositiveSmallIntegerField()
-    # 0 = not occluded, 1 = partially occluded, 2 = occluded
