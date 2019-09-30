@@ -105,14 +105,6 @@
             <b-table-column label="Actions">
               <button class="button is-primary is-small" @click="startAnnotating(props.index)">Annotate</button>
               <button class="button is-warning is-small" @click="startReviewing(props.index)">Review</button>
-              <!-- <router-link :to="{
-                name: 'annotate',
-                params: { backQueryParams: requestParams, videoId: props.row.id}
-                }" class="button is-primary is-small">Annotate</router-link>
-              <router-link :to="{
-                name: 'review',
-                params: { backQueryParams: requestParams, videoId: props.row.id}
-                }" class="button is-warning is-small">Review</router-link> -->
             </b-table-column>
           </template>
         </b-table>

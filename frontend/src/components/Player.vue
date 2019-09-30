@@ -134,20 +134,6 @@ export default {
       })
       return (annotation.length > 0) ? annotation[0] : null
     },
-    // currentOcclusionFlag: {
-    //   get () {
-    //     if (this.currentFrame) {
-    //       let flags = this.currentFrame.user_occlusion_flags.filter(f => f.segmented_object_id === this.selectedObject.id)
-    //       if (flags.length > 0) {
-    //         let flag = flags[0].occluded
-    //         if (flag === 0) return 'No'
-    //         if (flag === 1) return 'Partially'
-    //         if (flag === 2) return 'Fully'
-    //       }
-    //     }
-    //     return 'Not specified'
-    //   }
-    // },
     ready () {
       return {
         userReady: !_.isEmpty(this.user),
@@ -286,8 +272,6 @@ export default {
 
     this.annotationCanvasContext.imageSmoothingEnabled = false
 
-    // Setup requestAnimationFrame polyfill
-    // this.initializeRequestAnimationFrame()
     // Setup correct canvas dimensions
     this.updateCanvasDimensions()
   },

@@ -68,12 +68,6 @@
 
       <div class="column">
         <header class="subtitle">Frame Annotation</header>
-        <!-- <label class="label">Occluded?</label>
-        <div class="field has-addons">
-          <b-radio-button v-model="currentOcclusionFlag" :native-value="0">No</b-radio-button>
-          <b-radio-button v-model="currentOcclusionFlag" :native-value="1">Partially</b-radio-button>
-          <b-radio-button v-model="currentOcclusionFlag" :native-value="2">Fully</b-radio-button>
-        </div> -->
         <div class="field">
           <label class="label">Brush Size</label>
           <input type="range" min="1" max="100" v-model="brushSize">
@@ -177,24 +171,6 @@ export default {
         return null
       }
     },
-    // currentOcclusionFlag: {
-    //   get () {
-    //     if (this.currentFrame) {
-    //       let flags = this.currentFrame.user_occlusion_flags.filter(f => f.segmented_object_id === this.selectedObject.id)
-    //       if (flags.length > 0) return flags[0].occluded
-    //     }
-    //     return -1
-    //   },
-    //   set (newValue) {
-    //     let flag = this.currentFrame.user_occlusion_flags.filter(f => f.segmented_object_id === this.selectedObject.id)
-    //     if (flag.length >= 1) {
-    //       this.updateOcclusionFlag(flag[0].id, newValue)
-    //     } else {
-    //       this.addOcclusionFlag(newValue)
-    //     }
-    //   }
-    // },
-    // isAnnotating () { return this.currentOcclusionFlag > 0 },
     ready () {
       return {
         userReady: !_.isEmpty(this.user),
@@ -224,27 +200,6 @@ export default {
 
   methods: {
     /* Annotation mode methods  */
-    // addOcclusionFlag (status) {
-    //   API.post(`occlusion_flags/`, {
-    //     frame: this.currentFrame.id,
-    //     segmented_object_id: this.selectedObject.id,
-    //     occluded: status
-    //   }).then(response => {
-    //     let flag = response.data
-    //     this.currentFrame.user_occlusion_flags.push({
-    //       id: flag.id,
-    //       occluded: flag.occluded,
-    //       segmented_object_id: flag.segmented_object_id
-    //     })
-    //   })
-    // },
-    // updateOcclusionFlag (flagId, status) {
-    //   API.patch(`occlusion_flags/${flagId}`, { occluded: status })
-    //     .then(response => {
-    //       let flag = this.currentFrame.user_occlusion_flags.find(f => f.id === flagId)
-    //       flag.occluded = status
-    //     })
-    // },
     saveAnnotation () {
       console.log('Saving annotation for frame ' + this.currentFrame.sequence_number)
       this.clear(this.outputCanvasContext)
@@ -446,8 +401,6 @@ export default {
 
     this.annotationCanvasContext.imageSmoothingEnabled = false
 
-    // Setup requestAnimationFrame polyfill
-    // this.initializeRequestAnimationFrame()
     // Setup correct canvas dimensions
     this.updateCanvasDimensions()
   },
