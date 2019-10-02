@@ -1,4 +1,5 @@
 # Video Occlusion Annotation Tool
+Developed for Vondrick Lab @ Columbia University
 
 ## Screenshots
 ![Dashboard Screenshot](https://i.imgur.com/EYmsuiT.png)
