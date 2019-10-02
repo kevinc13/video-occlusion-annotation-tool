@@ -2,7 +2,7 @@
 
 ## Screenshots
 ![Dashboard Screenshot](https://i.imgur.com/EYmsuiT.png)
-![Annotation Screenshot](https://i.imgur.com/sMKnTHo.png)
+![Annotation Screenshot](https://i.imgur.com/jGsXff1.png)
 
 ## Requirements
 - Python 3.6+ / pip
