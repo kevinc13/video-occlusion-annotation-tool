@@ -1,5 +1,9 @@
 # Video Occlusion Annotation Tool
 
+## Screenshots
+![Dashboard Screenshot](https://i.imgur.com/EYmsuiT.png)
+![Annotation Screenshot](https://i.imgur.com/sMKnTHo.png)
+
 ## Requirements
 - Python 3.6+ / pip
 - Node / NPM
